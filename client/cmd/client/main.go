@@ -9,7 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	logger "github.com/multiversx/mx-chain-logger-go"
-	bridgeClient "github.com/multiversx/mx-chain-sovereign-bridge-go/client"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/client"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/client/config"
 	"github.com/urfave/cli"
 )
@@ -44,24 +44,31 @@ func startClient(ctx *cli.Context) error {
 
 	log.Info("starting client...")
 
-	client, err := bridgeClient.CreateClient(cfg)
+	bridgeClient, err := client.CreateClient(cfg)
 	if err != nil {
 		return err
 	}
 
 	defer func() {
-		err = client.Close()
+		err = bridgeClient.Close()
 		log.LogIfError(err)
 	}()
 
+	return sendData(bridgeClient)
+}
+
+func sendData(bridgeClient client.ClientHandler) error {
 	for i := 0; i < 5; i++ {
 		hash := []byte(fmt.Sprintf("hash_%d", i))
 		log.Info("sending data", "hash", hash)
 
-		res, errSend := client.Send(context.Background(), &sovereign.BridgeOperations{
+		res, errSend := bridgeClient.Send(context.Background(), &sovereign.BridgeOperations{
 			Data: []*sovereign.BridgeOutGoingData{
 				{
 					Hash: hash,
+					OutGoingOperations: map[string][]byte{
+						"fc07": []byte("bridgeOp"),
+					},
 				},
 			},
 		})

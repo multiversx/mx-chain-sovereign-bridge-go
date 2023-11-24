@@ -11,6 +11,7 @@ type client struct {
 	conn         GRPCConn
 }
 
+// NewClient creates a wrapper over the grpc client connection and tx sender
 func NewClient(bridgeClient sovereign.BridgeTxSenderClient, conn GRPCConn) (*client, error) {
 	if conn == nil {
 		return nil, errNilClientConnection
@@ -25,14 +26,17 @@ func NewClient(bridgeClient sovereign.BridgeTxSenderClient, conn GRPCConn) (*cli
 	}, nil
 }
 
+// Send sends bridge operations to the server
 func (c *client) Send(ctx context.Context, data *sovereign.BridgeOperations) (*sovereign.BridgeOperationsResponse, error) {
 	return c.bridgeClient.Send(ctx, data)
 }
 
+// Close closes internal grpc connection
 func (c *client) Close() error {
 	return c.conn.Close()
 }
 
+// IsInterfaceNil checks if the underlying pointer is nil
 func (c *client) IsInterfaceNil() bool {
 	return c == nil
 }
