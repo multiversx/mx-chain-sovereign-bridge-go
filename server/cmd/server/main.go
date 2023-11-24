@@ -6,18 +6,21 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server"
-	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/config"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/cmd/config"
 
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
 )
 
 var log = logger.GetOrCreate("server")
+
+const retrialTimeServe = 1
 
 func main() {
 	app := cli.NewApp()
@@ -57,13 +60,13 @@ func startServer(ctx *cli.Context) error {
 	}
 
 	sovereign.RegisterBridgeTxSenderServer(grpcServer, bridgeServer)
-
 	log.Info("starting server...")
 
 	go func() {
 		for {
 			if err = grpcServer.Serve(listener); err != nil {
 				log.LogIfError(err)
+				time.Sleep(retrialTimeServe * time.Second)
 			}
 		}
 	}()

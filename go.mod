@@ -2,15 +2,13 @@ module github.com/multiversx/mx-chain-sovereign-bridge-go
 
 go 1.20
 
-//	github.com/multiversx/mx-chain-core-go v1.2.17-0.20231121125700-72ed6990c43c
 require (
 	github.com/joho/godotenv v1.5.1
 	github.com/multiversx/mx-chain-core-go v1.2.17-0.20231121125700-72ed6990c43c
+	github.com/multiversx/mx-chain-logger-go v1.0.13
 	github.com/urfave/cli v1.22.14
 	google.golang.org/grpc v1.59.0
 )
-
-require github.com/multiversx/mx-chain-logger-go v1.0.13
 
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.2 // indirect
