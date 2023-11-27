@@ -2,4 +2,4 @@ package txSender
 
 import "errors"
 
-var errInvalidWallet = errors.New("invalid/unknown wallet type")
+var errInvalidWalletType = errors.New("invalid/unknown wallet type")

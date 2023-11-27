@@ -35,7 +35,7 @@ func LoadWallet(cfg WalletConfig) (core.CryptoComponentsHolder, error) {
 	case json:
 		privateKey, err = w.LoadPrivateKeyFromJsonFile(cfg.Path, cfg.Password)
 	default:
-		return nil, fmt.Errorf("%w: %s, acceptable:%s, %s", errInvalidWallet, walletType, pem, json)
+		return nil, fmt.Errorf("%w: %s, acceptable:%s, %s", errInvalidWalletType, walletType, pem, json)
 	}
 
 	if err != nil {
