@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/joho/godotenv v1.5.1
-	github.com/multiversx/mx-chain-core-go v1.2.17-0.20231121125700-72ed6990c43c
+	github.com/multiversx/mx-chain-core-go v1.2.17-0.20231127151200-a96f40ee1256
 	github.com/multiversx/mx-chain-crypto-go v1.2.8
 	github.com/multiversx/mx-chain-logger-go v1.0.13
 	github.com/multiversx/mx-sdk-go v1.3.8
