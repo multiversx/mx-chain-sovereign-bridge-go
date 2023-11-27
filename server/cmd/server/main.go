@@ -13,6 +13,7 @@ import (
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/cmd/config"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/txSender"
 
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
@@ -54,7 +55,7 @@ func startServer(ctx *cli.Context) error {
 	}
 
 	grpcServer := grpc.NewServer()
-	bridgeServer, err := server.NewServer()
+	bridgeServer, err := server.CreateServer(cfg)
 	if err != nil {
 		return err
 	}
@@ -88,11 +89,17 @@ func loadConfig() (*config.ServerConfig, error) {
 	}
 
 	grpcPort := os.Getenv("GRPC_PORT")
+	walletPath := os.Getenv("WALLET_PATH")
+	walletPassword := os.Getenv("WALLET_PASSWORD")
 
 	log.Info("loaded config", "grpc port", grpcPort)
 
 	return &config.ServerConfig{
 		GRPCPort: grpcPort,
+		WalletConfig: txSender.WalletConfig{
+			Path:     walletPath,
+			Password: walletPassword,
+		},
 	}, nil
 }
 

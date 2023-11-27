@@ -23,11 +23,7 @@ const (
 	pem  = "pem"
 )
 
-type wallet struct {
-	core.CryptoComponentsHolder
-}
-
-func LoadWallet(cfg WalletConfig) (*wallet, error) {
+func LoadWallet(cfg WalletConfig) (core.CryptoComponentsHolder, error) {
 	var privateKey []byte
 	var err error
 
@@ -42,19 +38,16 @@ func LoadWallet(cfg WalletConfig) (*wallet, error) {
 		return nil, fmt.Errorf("%w: %s, acceptable:%s, %s", errInvalidWallet, walletType, pem, json)
 	}
 
+	if err != nil {
+		return nil, err
+	}
+
 	_, err = w.GetAddressFromPrivateKey(privateKey)
 	if err != nil {
 		return nil, err
 	}
 
-	holder, err := cryptoProvider.NewCryptoComponentsHolder(keyGen, privateKey)
-	if err != nil {
-		return nil, err
-	}
-
-	return &wallet{
-		CryptoComponentsHolder: holder,
-	}, nil
+	return cryptoProvider.NewCryptoComponentsHolder(keyGen, privateKey)
 }
 
 func getWalletType(walletPath string) string {
