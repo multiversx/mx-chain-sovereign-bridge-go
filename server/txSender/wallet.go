@@ -23,6 +23,7 @@ const (
 	pem  = "pem"
 )
 
+// LoadWallet loads a wallet using provided config
 func LoadWallet(cfg WalletConfig) (core.CryptoComponentsHolder, error) {
 	var privateKey []byte
 	var err error
