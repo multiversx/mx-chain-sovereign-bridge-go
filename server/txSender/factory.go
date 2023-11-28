@@ -43,9 +43,11 @@ func CreateTxSender(wallet core.CryptoComponentsHolder) (*txSender, error) {
 	}
 
 	return NewTxSender(TxSenderArgs{
-		Wallet:       wallet,
-		Proxy:        proxy,
-		NetConfigs:   netConfigs,
-		TxInteractor: ti,
+		Wallet:        wallet,
+		Proxy:         proxy,
+		NetConfigs:    netConfigs,
+		TxInteractor:  ti,
+		DataFormatter: NewDataFormatter(),
+		Receiver:      "",
 	})
 }

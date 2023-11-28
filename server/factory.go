@@ -8,10 +8,15 @@ import (
 
 // CreateServer creates a new grpc server
 func CreateServer(cfg *config.ServerConfig) (sovereign.BridgeTxSenderServer, error) {
-	_, err := txSender.LoadWallet(cfg.WalletConfig)
+	wallet, err := txSender.LoadWallet(cfg.WalletConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewServer()
+	txSnd, err := txSender.CreateTxSender(wallet)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewServer(txSnd)
 }
