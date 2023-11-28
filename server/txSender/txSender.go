@@ -28,6 +28,7 @@ type txSender struct {
 	receiver      string
 }
 
+// NewTxSender creates a new tx sender
 func NewTxSender(args TxSenderArgs) (*txSender, error) {
 	return &txSender{
 		wallet:        args.Wallet,
@@ -39,6 +40,7 @@ func NewTxSender(args TxSenderArgs) (*txSender, error) {
 	}, nil
 }
 
+// SendTx should send bridge data operation txs
 func (ts *txSender) SendTx(ctx context.Context, data *sovereign.BridgeOperations) ([]string, error) {
 	if len(data.Data) == 0 {
 		return make([]string, 0), nil
@@ -67,7 +69,7 @@ func (ts *txSender) createTxs(data *sovereign.BridgeOperations, account *data.Ac
 			Receiver: "", // todo
 			Sender:   ts.wallet.GetBech32(),
 			GasPrice: ts.netConfigs.MinGasPrice, // todo
-			GasLimit: 300_000_000,               // todo
+			GasLimit: 50_000_000,                // todo
 			Data:     txData,
 			ChainID:  ts.netConfigs.ChainID,
 			Version:  ts.netConfigs.MinTransactionVersion,
@@ -83,4 +85,9 @@ func (ts *txSender) createTxs(data *sovereign.BridgeOperations, account *data.Ac
 	}
 
 	return int(nonce-account.Nonce) + 1, nil
+}
+
+// IsInterfaceNil checks if the underlying pointer is nil
+func (ts *txSender) IsInterfaceNil() bool {
+	return ts == nil
 }

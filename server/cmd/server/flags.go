@@ -12,6 +12,6 @@ var (
 			", if set to *:INFO the logs for all packages will have the INFO level. However, if set to *:INFO,fork:DEBUG" +
 			" the logs for all packages will have the INFO level, excepting the fork package which will receive a DEBUG" +
 			" log level.",
-		Value: "*:" + logger.LogInfo.String(),
+		Value: "*:" + logger.LogDebug.String(),
 	}
 )

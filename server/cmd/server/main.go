@@ -91,11 +91,14 @@ func loadConfig() (*config.ServerConfig, error) {
 	grpcPort := os.Getenv("GRPC_PORT")
 	walletPath := os.Getenv("WALLET_PATH")
 	walletPassword := os.Getenv("WALLET_PASSWORD")
+	bridgeSCAddress := os.Getenv("BRIDGE_SC_ADDRESS")
 
 	log.Info("loaded config", "grpc port", grpcPort)
+	log.Info("loaded config", "bridgeSCAddress", bridgeSCAddress)
 
 	return &config.ServerConfig{
-		GRPCPort: grpcPort,
+		GRPCPort:        grpcPort,
+		BridgeSCAddress: bridgeSCAddress,
 		WalletConfig: txSender.WalletConfig{
 			Path:     walletPath,
 			Password: walletPassword,
