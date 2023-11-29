@@ -92,16 +92,21 @@ func loadConfig() (*config.ServerConfig, error) {
 	walletPath := os.Getenv("WALLET_PATH")
 	walletPassword := os.Getenv("WALLET_PASSWORD")
 	bridgeSCAddress := os.Getenv("BRIDGE_SC_ADDRESS")
+	proxy := os.Getenv("MULTIVERSX_PROXY")
 
 	log.Info("loaded config", "grpc port", grpcPort)
 	log.Info("loaded config", "bridgeSCAddress", bridgeSCAddress)
+	log.Info("loaded config", "proxy", proxy)
 
 	return &config.ServerConfig{
-		GRPCPort:        grpcPort,
-		BridgeSCAddress: bridgeSCAddress,
+		GRPCPort: grpcPort,
 		WalletConfig: txSender.WalletConfig{
 			Path:     walletPath,
 			Password: walletPassword,
+		},
+		TxSenderConfig: txSender.TxSenderConfig{
+			BridgeSCAddress: bridgeSCAddress,
+			Proxy:           proxy,
 		},
 	}, nil
 }

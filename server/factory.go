@@ -13,7 +13,7 @@ func CreateServer(cfg *config.ServerConfig) (sovereign.BridgeTxSenderServer, err
 		return nil, err
 	}
 
-	txSnd, err := txSender.CreateTxSender(wallet, cfg.BridgeSCAddress)
+	txSnd, err := txSender.CreateTxSender(wallet, cfg.TxSenderConfig)
 	if err != nil {
 		return nil, err
 	}

@@ -8,13 +8,12 @@ import (
 	"github.com/multiversx/mx-sdk-go/blockchain/cryptoProvider"
 	"github.com/multiversx/mx-sdk-go/builders"
 	"github.com/multiversx/mx-sdk-go/core"
-	"github.com/multiversx/mx-sdk-go/examples"
 	"github.com/multiversx/mx-sdk-go/interactors"
 )
 
-func CreateTxSender(wallet core.CryptoComponentsHolder, bridgeSCAddress string) (*txSender, error) {
+func CreateTxSender(wallet core.CryptoComponentsHolder, cfg TxSenderConfig) (*txSender, error) {
 	args := blockchain.ArgsProxy{
-		ProxyURL:            examples.TestnetGateway,
+		ProxyURL:            cfg.Proxy,
 		Client:              nil,
 		SameScState:         false,
 		ShouldBeSynced:      false,
@@ -43,11 +42,11 @@ func CreateTxSender(wallet core.CryptoComponentsHolder, bridgeSCAddress string) 
 	}
 
 	return NewTxSender(TxSenderArgs{
-		Wallet:        wallet,
-		Proxy:         proxy,
-		NetConfigs:    netConfigs,
-		TxInteractor:  ti,
-		DataFormatter: NewDataFormatter(),
-		Receiver:      bridgeSCAddress,
+		Wallet:          wallet,
+		Proxy:           proxy,
+		NetConfigs:      netConfigs,
+		TxInteractor:    ti,
+		DataFormatter:   NewDataFormatter(),
+		SCBridgeAddress: cfg.BridgeSCAddress,
 	})
 }
