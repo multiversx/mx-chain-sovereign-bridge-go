@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"sync"
-	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
@@ -60,10 +59,14 @@ func startClient(ctx *cli.Context) error {
 
 func sendData(bridgeClient client.ClientHandler) error {
 
-	txHashes := make([]string, 0)
+	txHashes := make(map[string]struct{})
 	mut := sync.RWMutex{}
 
-	numBridgeOps := 5
+	numBridgeOps := 4
+	expectedNumBridgeTxs := 3 * numBridgeOps
+	wg := sync.WaitGroup{}
+	wg.Add(expectedNumBridgeTxs)
+
 	for i := 0; i < numBridgeOps; i++ {
 		hash := []byte(fmt.Sprintf("hash_%d", i))
 		log.Info("sending data", "hash", hash)
@@ -74,8 +77,11 @@ func sendData(bridgeClient client.ClientHandler) error {
 					{
 						Hash: hash,
 						OutGoingOperations: map[string][]byte{
-							"fc07": []byte("bridgeOp"),
+							"fc07": []byte("bridgeOp1"),
+							"df0c": []byte("bridgeOp2"),
 						},
+						AggregatedSignature: []byte("aggregatedSig"),
+						LeaderSignature:     []byte("leaderSig"),
 					},
 				},
 			})
@@ -84,18 +90,13 @@ func sendData(bridgeClient client.ClientHandler) error {
 				return
 			}
 
-			logTxHashes(res.TxHashes)
-
-			mut.Lock()
-			txHashes = append(txHashes, res.TxHashes...)
-			mut.Unlock()
+			saveTxHashes(res.TxHashes, txHashes, &mut, &wg)
 		}()
 	}
 
-	time.Sleep(time.Second * 50)
+	wg.Wait()
 
 	numSentTxs := len(txHashes)
-	expectedNumBridgeTxs := 2 * numBridgeOps
 	if numSentTxs != expectedNumBridgeTxs {
 		return fmt.Errorf("did not send all txs; expected num send txs: %d, received: %d",
 			expectedNumBridgeTxs, numSentTxs)
@@ -104,9 +105,15 @@ func sendData(bridgeClient client.ClientHandler) error {
 	return nil
 }
 
-func logTxHashes(txHashes []string) {
+func saveTxHashes(txHashes []string, txHashesMap map[string]struct{}, mut *sync.RWMutex, wg *sync.WaitGroup) {
 	for _, txHash := range txHashes {
 		log.Info("received", "tx hash", txHash)
+
+		mut.Lock()
+		txHashesMap[txHash] = struct{}{}
+		mut.Unlock()
+
+		wg.Done()
 	}
 }
 

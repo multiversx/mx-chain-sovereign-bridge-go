@@ -2,6 +2,8 @@ package txSender
 
 import (
 	"context"
+	"fmt"
+	"math"
 	"sync"
 	"time"
 
@@ -11,6 +13,11 @@ import (
 	"github.com/multiversx/mx-sdk-go/blockchain"
 	"github.com/multiversx/mx-sdk-go/core"
 	"github.com/multiversx/mx-sdk-go/data"
+)
+
+const (
+	maxRequestsRetrial = 10
+	waitTimeRetrialsMs = 50
 )
 
 // TxSenderArgs holds args to create a new tx sender
@@ -82,9 +89,7 @@ func (ts *txSender) SendTx(ctx context.Context, data *sovereign.BridgeOperations
 	ts.mut.Lock()
 	defer ts.mut.Unlock()
 
-	ts.waitForNonce()
-
-	account, err := ts.proxy.GetAccount(ctx, ts.wallet.GetAddressHandler())
+	account, err := ts.getUpdatedAccount(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -126,23 +131,41 @@ func (ts *txSender) createTxs(data *sovereign.BridgeOperations, account *data.Ac
 	return int(nonce - account.Nonce), nil
 }
 
-func (ts *txSender) waitForNonce() {
-	for {
-		select {
-		case <-time.After(time.Duration(1) * time.Second):
-			acc, err := ts.proxy.GetAccount(context.Background(), ts.wallet.GetAddressHandler())
-			if err != nil {
-				log.Error("txSender.waitForNonce", "error", err)
-				continue
-			}
+func (ts *txSender) getUpdatedAccount(ctx context.Context) (*data.Account, error) {
+	numRetrials := 0
+	for numRetrials < maxRequestsRetrial {
+		acc, err := ts.proxy.GetAccount(ctx, ts.wallet.GetAddressHandler())
+		if err != nil {
+			log.Error("txSender.waitForNonce", "error", err)
 
-			waitNonce := ts.waitNonce
-			if acc.Nonce == waitNonce {
-				return
-			}
+			waitInCaseOfError(&numRetrials)
+			continue
 		}
 
+		if acc.Nonce == ts.waitNonce {
+			return acc, nil
+		}
+
+		time.Sleep(time.Second)
 	}
+
+	return nil, fmt.Errorf("%w after %d retrials", errCannotGetAccount, maxRequestsRetrial)
+}
+
+func waitInCaseOfError(numRetrials *int) {
+	*numRetrials++
+	sleepDuration := calcRetryBackOffTime(*numRetrials)
+	log.Warn("txSender.waitForNonce.proxy.GetAccount; retrying...",
+		"num retrials", *numRetrials,
+		"sleep duration", sleepDuration,
+	)
+
+	time.Sleep(sleepDuration)
+}
+
+func calcRetryBackOffTime(attemptNumber int) time.Duration {
+	exp := math.Exp2(float64(attemptNumber))
+	return time.Duration(exp) * waitTimeRetrialsMs * time.Millisecond
 }
 
 // IsInterfaceNil checks if the underlying pointer is nil

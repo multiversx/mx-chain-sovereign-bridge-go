@@ -6,6 +6,11 @@ import (
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 )
 
+const (
+	registerBridgeOpsPrefix = "registerBridgeOps"
+	executeBridgeOpPrefix   = "executeBridgeOp"
+)
+
 type dataFormatter struct {
 }
 
@@ -29,8 +34,10 @@ func (df *dataFormatter) CreateTxsData(data *sovereign.BridgeOperations) [][]byt
 
 func createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData) []byte {
 	registerBridgeOpTxData := []byte(
-		hex.EncodeToString(bridgeData.LeaderSignature) + "@" +
-			hex.EncodeToString(bridgeData.AggregatedSignature))
+		registerBridgeOpsPrefix + "@" +
+			hex.EncodeToString(bridgeData.LeaderSignature) + "@" +
+			hex.EncodeToString(bridgeData.AggregatedSignature) + "@" +
+			hex.EncodeToString(bridgeData.Hash))
 
 	listOfOps := make([]byte, 0, len(bridgeData.OutGoingOperations))
 	for operationHash := range bridgeData.OutGoingOperations {
@@ -44,7 +51,7 @@ func createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData
 func createBridgeOperationsData(outGoingOperations map[string][]byte) [][]byte {
 	ret := make([][]byte, 0)
 	for operationHash, bridgeOpData := range outGoingOperations {
-		currBridgeOp := []byte(operationHash + "@")
+		currBridgeOp := []byte(executeBridgeOpPrefix + "@" + operationHash + "@")
 		currBridgeOp = append(currBridgeOp, bridgeOpData...)
 
 		ret = append(ret, currBridgeOp)
