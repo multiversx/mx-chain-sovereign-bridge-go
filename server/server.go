@@ -15,9 +15,9 @@ type server struct {
 	*sovereign.UnimplementedBridgeTxSenderServer
 }
 
-// NewServer creates a new sovereign bridge operations server. This server receives bridge data operations from
+// NewSovereignBridgeTxServer creates a new sovereign bridge operations server. This server receives bridge data operations from
 // sovereign nodes and sends transactions to main chain.
-func NewServer(txSender TxSender) (*server, error) {
+func NewSovereignBridgeTxServer(txSender TxSender) (*server, error) {
 	if check.IfNil(txSender) {
 		return nil, errNilTxSender
 	}

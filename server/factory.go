@@ -6,7 +6,7 @@ import (
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/txSender"
 )
 
-// CreateServer creates a new grpc server
+// CreateServer creates a new bridge txs sender grpc server
 func CreateServer(cfg *config.ServerConfig) (sovereign.BridgeTxSenderServer, error) {
 	wallet, err := txSender.LoadWallet(cfg.WalletConfig)
 	if err != nil {
@@ -18,5 +18,5 @@ func CreateServer(cfg *config.ServerConfig) (sovereign.BridgeTxSenderServer, err
 		return nil, err
 	}
 
-	return NewServer(txSnd)
+	return NewSovereignBridgeTxServer(txSnd)
 }

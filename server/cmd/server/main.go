@@ -9,8 +9,11 @@ import (
 	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/multiversx/mx-chain-core-go/core/check"
+	"github.com/multiversx/mx-chain-core-go/core/closing"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	logger "github.com/multiversx/mx-chain-logger-go"
+	"github.com/multiversx/mx-chain-logger-go/file"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/cmd/config"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/txSender"
@@ -19,9 +22,21 @@ import (
 	"google.golang.org/grpc"
 )
 
-var log = logger.GetOrCreate("server")
+var log = logger.GetOrCreate("sov-bridge-sender")
 
-const retrialTimeServe = 1
+const (
+	retrialTimeServe = 1
+	logsPath         = "logs"
+	logsPrefix       = "sov-bridge-sender"
+	logLifeSpanMb    = 1024   //# 1GB
+	logLifeSpanSec   = 432000 // 5 days
+)
+
+const (
+	envGRPCPort = "GRPC_PORT"
+	envWallet   = "WALLET_PATH"
+	envPassword = "WALLET_PASSWORD"
+)
 
 func main() {
 	app := cli.NewApp()
@@ -44,7 +59,7 @@ func startServer(ctx *cli.Context) error {
 		return err
 	}
 
-	err = initializeLogger(ctx)
+	logFile, err := initializeLogger(ctx)
 	if err != nil {
 		return err
 	}
@@ -55,7 +70,7 @@ func startServer(ctx *cli.Context) error {
 	}
 
 	grpcServer := grpc.NewServer()
-	bridgeServer, err := server.CreateServer(cfg)
+	bridgeServer, err := server.NewSovereignBridgeTxServer()
 	if err != nil {
 		return err
 	}
@@ -79,6 +94,12 @@ func startServer(ctx *cli.Context) error {
 	log.Info("closing app at user's signal")
 
 	grpcServer.Stop()
+
+	if !check.IfNilReflect(logFile) {
+		err = logFile.Close()
+		log.LogIfError(err)
+	}
+
 	return nil
 }
 
@@ -88,9 +109,9 @@ func loadConfig() (*config.ServerConfig, error) {
 		return nil, err
 	}
 
-	grpcPort := os.Getenv("GRPC_PORT")
-	walletPath := os.Getenv("WALLET_PATH")
-	walletPassword := os.Getenv("WALLET_PASSWORD")
+	grpcPort := os.Getenv(envGRPCPort)
+	walletPath := os.Getenv(envWallet)
+	walletPassword := os.Getenv(envPassword)
 	bridgeSCAddress := os.Getenv("BRIDGE_SC_ADDRESS")
 	proxy := os.Getenv("MULTIVERSX_PROXY")
 
@@ -111,7 +132,59 @@ func loadConfig() (*config.ServerConfig, error) {
 	}, nil
 }
 
-func initializeLogger(ctx *cli.Context) error {
+func initializeLogger(ctx *cli.Context) (closing.Closer, error) {
 	logLevelFlagValue := ctx.GlobalString(logLevel.Name)
-	return logger.SetLogLevel(logLevelFlagValue)
+	err := logger.SetLogLevel(logLevelFlagValue)
+	if err != nil {
+		return nil, err
+	}
+
+	withLogFile := ctx.GlobalBool(logSaveFile.Name)
+	if !withLogFile {
+		return nil, nil
+	}
+
+	workingDir, err := os.Getwd()
+	if err != nil {
+		log.LogIfError(err)
+		workingDir = ""
+	}
+
+	fileLogging, err := file.NewFileLogging(file.ArgsFileLogging{
+		WorkingDir:      workingDir,
+		DefaultLogsPath: logsPath,
+		LogFilePrefix:   logsPrefix,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("%w creating a log file", err)
+	}
+
+	err = fileLogging.ChangeFileLifeSpan(
+		time.Second*time.Duration(logLifeSpanSec),
+		uint64(logLifeSpanMb),
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	disableAnsi := ctx.GlobalBool(disableAnsiColor.Name)
+	err = removeANSIColorsForLoggerIfNeeded(disableAnsi)
+	if err != nil {
+		return nil, err
+	}
+
+	return fileLogging, nil
+}
+
+func removeANSIColorsForLoggerIfNeeded(disableAnsi bool) error {
+	if !disableAnsi {
+		return nil
+	}
+
+	err := logger.RemoveLogObserver(os.Stdout)
+	if err != nil {
+		return err
+	}
+
+	return logger.AddLogObserver(os.Stdout, &logger.PlainFormatter{})
 }
