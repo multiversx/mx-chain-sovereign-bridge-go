@@ -26,11 +26,16 @@ var log = logger.GetOrCreate("sov-bridge-sender")
 
 const (
 	retrialTimeServe = 1
-	envGRPCPort      = "GRPC_PORT"
 	logsPath         = "logs"
 	logsPrefix       = "sov-bridge-sender"
 	logLifeSpanMb    = 1024   //# 1GB
 	logLifeSpanSec   = 432000 // 5 days
+)
+
+const (
+	envGRPCPort = "GRPC_PORT"
+	envWallet   = "WALLET_PATH"
+	envPassword = "WALLET_PASSWORD"
 )
 
 func main() {
@@ -105,8 +110,8 @@ func loadConfig() (*config.ServerConfig, error) {
 	}
 
 	grpcPort := os.Getenv(envGRPCPort)
-	walletPath := os.Getenv("WALLET_PATH")
-	walletPassword := os.Getenv("WALLET_PASSWORD")
+	walletPath := os.Getenv(envWallet)
+	walletPassword := os.Getenv(envPassword)
 
 	log.Info("loaded config", "grpc port", grpcPort)
 
