@@ -76,9 +76,15 @@ func sendData(bridgeClient client.ClientHandler) error {
 				Data: []*sovereign.BridgeOutGoingData{
 					{
 						Hash: hash,
-						OutGoingOperations: map[string][]byte{
-							"fc07": []byte("bridgeOp1"),
-							"df0c": []byte("bridgeOp2"),
+						OutGoingOperations: []*sovereign.OutGoingOperation{
+							{
+								Hash: []byte("opHash1"),
+								Data: []byte("bridgeOp1"),
+							},
+							{
+								Hash: []byte("opHash2"),
+								Data: []byte("bridgeOp2"),
+							},
 						},
 						AggregatedSignature: []byte("aggregatedSig"),
 						LeaderSignature:     []byte("leaderSig"),

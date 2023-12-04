@@ -22,6 +22,9 @@ func NewDataFormatter() *dataFormatter {
 // CreateTxsData creates txs data for bridge operations
 func (df *dataFormatter) CreateTxsData(data *sovereign.BridgeOperations) [][]byte {
 	txsData := make([][]byte, 0)
+	if data == nil {
+		return txsData
+	}
 
 	for _, bridgeData := range data.Data {
 		log.Debug("creating tx data", "bridge op hash", bridgeData.Hash)
@@ -40,19 +43,19 @@ func createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData
 			hex.EncodeToString(bridgeData.Hash))
 
 	listOfOps := make([]byte, 0, len(bridgeData.OutGoingOperations))
-	for operationHash := range bridgeData.OutGoingOperations {
+	for _, operation := range bridgeData.OutGoingOperations {
 		listOfOps = append(listOfOps, []byte("@")...)
-		listOfOps = append(listOfOps, []byte(operationHash)...)
+		listOfOps = append(listOfOps, []byte(hex.EncodeToString(operation.Hash))...)
 	}
 
 	return append(registerBridgeOpTxData, listOfOps...)
 }
 
-func createBridgeOperationsData(outGoingOperations map[string][]byte) [][]byte {
+func createBridgeOperationsData(outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
 	ret := make([][]byte, 0)
-	for operationHash, bridgeOpData := range outGoingOperations {
-		currBridgeOp := []byte(executeBridgeOpPrefix + "@" + operationHash + "@")
-		currBridgeOp = append(currBridgeOp, bridgeOpData...)
+	for _, operation := range outGoingOperations {
+		currBridgeOp := []byte(executeBridgeOpPrefix + "@" + hex.EncodeToString(operation.Hash) + "@")
+		currBridgeOp = append(currBridgeOp, operation.Data...)
 
 		ret = append(ret, currBridgeOp)
 	}
