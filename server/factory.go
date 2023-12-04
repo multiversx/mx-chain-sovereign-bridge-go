@@ -13,5 +13,5 @@ func CreateServer(cfg *config.ServerConfig) (sovereign.BridgeTxSenderServer, err
 		return nil, err
 	}
 
-	return NewServer()
+	return NewSovereignBridgeTxServer()
 }
