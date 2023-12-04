@@ -14,4 +14,12 @@ var (
 			" log level.",
 		Value: "*:" + logger.LogInfo.String(),
 	}
+	logSaveFile = cli.BoolFlag{
+		Name:  "log-save",
+		Usage: "Boolean option for enabling log saving. If set, it will automatically save all the logs into a file.",
+	}
+	disableAnsiColor = cli.BoolFlag{
+		Name:  "disable-ansi-color",
+		Usage: "Boolean option for disabling ANSI colors in the logging system.",
+	}
 )
