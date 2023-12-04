@@ -14,7 +14,12 @@ import (
 	"github.com/urfave/cli"
 )
 
-var log = logger.GetOrCreate("server")
+var log = logger.GetOrCreate("client-tx-sender")
+
+const (
+	envGRPCHost = "GRPC_HOST"
+	envGRPCPort = "GRPC_PORT"
+)
 
 func main() {
 	app := cli.NewApp()
@@ -95,8 +100,8 @@ func loadConfig() (*config.ClientConfig, error) {
 		return nil, err
 	}
 
-	grpcHost := os.Getenv("GRPC_HOST")
-	grpcPort := os.Getenv("GRPC_PORT")
+	grpcHost := os.Getenv(envGRPCHost)
+	grpcPort := os.Getenv(envGRPCPort)
 
 	log.Info("loaded config", "grpc host", grpcHost)
 	log.Info("loaded config", "grpc port", grpcPort)
