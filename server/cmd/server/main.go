@@ -70,7 +70,7 @@ func startServer(ctx *cli.Context) error {
 	}
 
 	grpcServer := grpc.NewServer()
-	bridgeServer, err := server.NewSovereignBridgeTxServer()
+	bridgeServer, err := server.CreateServer(cfg)
 	if err != nil {
 		return err
 	}
