@@ -21,7 +21,7 @@ func (s *server) Send(ctx context.Context, data *sovereign.BridgeOperations) (*s
 	_ = ctx
 	_ = data
 
-	return nil, nil
+	return &sovereign.BridgeOperationsResponse{}, nil
 }
 
 // IsInterfaceNil checks if the underlying pointer is nil
