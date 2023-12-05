@@ -9,7 +9,7 @@ import (
 
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
-	transaction2 "github.com/multiversx/mx-chain-core-go/data/transaction"
+	coreTx "github.com/multiversx/mx-chain-core-go/data/transaction"
 	"github.com/multiversx/mx-sdk-go/core"
 	"github.com/multiversx/mx-sdk-go/data"
 )
@@ -114,7 +114,7 @@ func (ts *txSender) createTxs(data *sovereign.BridgeOperations, account *data.Ac
 	txsData := ts.dataFormatter.CreateTxsData(data)
 	nonce := account.Nonce
 	for _, txData := range txsData {
-		tx := &transaction2.FrontendTransaction{
+		tx := &coreTx.FrontendTransaction{
 			Nonce:    nonce,
 			Value:    "1",
 			Receiver: ts.scBridgeAddress,
