@@ -29,7 +29,7 @@ func NewSovereignBridgeTxServer(txSender TxSender) (*server, error) {
 
 // Send should handle receiving data bridge operations from sovereign shard and forward transactions to main chain
 func (s *server) Send(ctx context.Context, data *sovereign.BridgeOperations) (*sovereign.BridgeOperationsResponse, error) {
-	hashes, err := s.txSender.SendTx(ctx, data)
+	hashes, err := s.txSender.SendTxs(ctx, data)
 	if err != nil {
 		return nil, err
 	}

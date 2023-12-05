@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -33,9 +34,10 @@ const (
 )
 
 const (
-	envGRPCPort = "GRPC_PORT"
-	envWallet   = "WALLET_PATH"
-	envPassword = "WALLET_PASSWORD"
+	envGRPCPort             = "GRPC_PORT"
+	envWallet               = "WALLET_PATH"
+	envPassword             = "WALLET_PASSWORD"
+	envMaxRetrialsWaitNonce = "MAX_RETRIALS_WAIT_NONCE"
 )
 
 func main() {
@@ -114,10 +116,17 @@ func loadConfig() (*config.ServerConfig, error) {
 	walletPassword := os.Getenv(envPassword)
 	bridgeSCAddress := os.Getenv("BRIDGE_SC_ADDRESS")
 	proxy := os.Getenv("MULTIVERSX_PROXY")
+	maxRetrialsWaitNonceStr := os.Getenv(envMaxRetrialsWaitNonce)
+
+	maxRetrialsWaitNonce, err := strconv.Atoi(maxRetrialsWaitNonceStr)
+	if err != nil {
+		return nil, err
+	}
 
 	log.Info("loaded config", "grpc port", grpcPort)
 	log.Info("loaded config", "bridgeSCAddress", bridgeSCAddress)
 	log.Info("loaded config", "proxy", proxy)
+	log.Info("loaded config", "maxRetrialsWaitNonce", maxRetrialsWaitNonce)
 
 	return &config.ServerConfig{
 		GRPCPort: grpcPort,
@@ -126,8 +135,9 @@ func loadConfig() (*config.ServerConfig, error) {
 			Password: walletPassword,
 		},
 		TxSenderConfig: txSender.TxSenderConfig{
-			BridgeSCAddress: bridgeSCAddress,
-			Proxy:           proxy,
+			BridgeSCAddress:      bridgeSCAddress,
+			Proxy:                proxy,
+			MaxRetrialsWaitNonce: maxRetrialsWaitNonce,
 		},
 	}, nil
 }

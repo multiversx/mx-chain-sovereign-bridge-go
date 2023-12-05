@@ -36,10 +36,11 @@ func CreateTxSender(wallet core.CryptoComponentsHolder, cfg TxSenderConfig) (*tx
 	}
 
 	return NewTxSender(TxSenderArgs{
-		Wallet:          wallet,
-		Proxy:           proxy,
-		TxInteractor:    ti,
-		DataFormatter:   NewDataFormatter(),
-		SCBridgeAddress: cfg.BridgeSCAddress,
+		Wallet:                wallet,
+		Proxy:                 proxy,
+		TxInteractor:          ti,
+		DataFormatter:         NewDataFormatter(),
+		SCBridgeAddress:       cfg.BridgeSCAddress,
+		MaxRetrialsGetAccount: cfg.MaxRetrialsWaitNonce,
 	})
 }

@@ -15,28 +15,29 @@ import (
 )
 
 const (
-	maxRequestsRetrial = 10
 	waitTimeRetrialsMs = 50
 )
 
 // TxSenderArgs holds args to create a new tx sender
 type TxSenderArgs struct {
-	Wallet          core.CryptoComponentsHolder
-	Proxy           Proxy
-	TxInteractor    TxInteractor
-	DataFormatter   DataFormatter
-	SCBridgeAddress string
+	Wallet                core.CryptoComponentsHolder
+	Proxy                 Proxy
+	TxInteractor          TxInteractor
+	DataFormatter         DataFormatter
+	SCBridgeAddress       string
+	MaxRetrialsGetAccount int
 }
 
 type txSender struct {
-	wallet          core.CryptoComponentsHolder
-	proxy           Proxy
-	netConfigs      *data.NetworkConfig
-	txInteractor    TxInteractor
-	dataFormatter   DataFormatter
-	scBridgeAddress string
-	waitNonce       uint64
-	mut             sync.RWMutex
+	wallet                core.CryptoComponentsHolder
+	proxy                 Proxy
+	netConfigs            *data.NetworkConfig
+	txInteractor          TxInteractor
+	dataFormatter         DataFormatter
+	scBridgeAddress       string
+	waitNonce             uint64
+	maxRetrialsGetAccount int
+	mut                   sync.RWMutex
 }
 
 // NewTxSender creates a new tx sender
@@ -57,13 +58,14 @@ func NewTxSender(args TxSenderArgs) (*txSender, error) {
 	}
 
 	return &txSender{
-		wallet:          args.Wallet,
-		proxy:           args.Proxy,
-		netConfigs:      networkConfig,
-		txInteractor:    args.TxInteractor,
-		dataFormatter:   args.DataFormatter,
-		scBridgeAddress: args.SCBridgeAddress,
-		waitNonce:       account.Nonce,
+		wallet:                args.Wallet,
+		proxy:                 args.Proxy,
+		netConfigs:            networkConfig,
+		txInteractor:          args.TxInteractor,
+		dataFormatter:         args.DataFormatter,
+		scBridgeAddress:       args.SCBridgeAddress,
+		waitNonce:             account.Nonce,
+		maxRetrialsGetAccount: args.MaxRetrialsGetAccount,
 	}, nil
 }
 
@@ -83,12 +85,15 @@ func checkArgs(args TxSenderArgs) error {
 	if len(args.SCBridgeAddress) == 0 {
 		return errNoSCBridgeAddress
 	}
+	if args.MaxRetrialsGetAccount == 0 {
+		return errZeroTimeWaitAccountNonceUpdate
+	}
 
 	return nil
 }
 
-// SendTx should send bridge data operation txs
-func (ts *txSender) SendTx(ctx context.Context, data *sovereign.BridgeOperations) ([]string, error) {
+// SendTxs should send bridge data operation txs
+func (ts *txSender) SendTxs(ctx context.Context, data *sovereign.BridgeOperations) ([]string, error) {
 	if len(data.Data) == 0 {
 		return make([]string, 0), nil
 	}
@@ -106,8 +111,13 @@ func (ts *txSender) SendTx(ctx context.Context, data *sovereign.BridgeOperations
 		return nil, err
 	}
 
+	txHashes, err := ts.txInteractor.SendTransactionsAsBunch(ctx, numTxs)
+	if err != nil {
+		return nil, err
+	}
+
 	ts.waitNonce = account.Nonce + uint64(numTxs)
-	return ts.txInteractor.SendTransactionsAsBunch(ctx, numTxs)
+	return txHashes, nil
 }
 
 func (ts *txSender) createTxs(data *sovereign.BridgeOperations, account *data.Account) (int, error) {
@@ -140,7 +150,7 @@ func (ts *txSender) createTxs(data *sovereign.BridgeOperations, account *data.Ac
 
 func (ts *txSender) getUpdatedAccount(ctx context.Context) (*data.Account, error) {
 	numRetrials := 0
-	for numRetrials < maxRequestsRetrial {
+	for numRetrials < ts.maxRetrialsGetAccount {
 		acc, err := ts.proxy.GetAccount(ctx, ts.wallet.GetAddressHandler())
 		if err != nil {
 			log.Error("txSender.waitForNonce", "error", err)
@@ -153,10 +163,14 @@ func (ts *txSender) getUpdatedAccount(ctx context.Context) (*data.Account, error
 			return acc, nil
 		}
 
+		log.Debug("txSender.getUpdatedAccount, waiting for account nonce update",
+			"account nonce", acc.Nonce, "expected nonce", ts.waitNonce)
+
 		time.Sleep(time.Second)
+		numRetrials++
 	}
 
-	return nil, fmt.Errorf("%w after %d retrials", errCannotGetAccount, maxRequestsRetrial)
+	return nil, fmt.Errorf("%w after %d retrials", errCannotGetAccount, ts.maxRetrialsGetAccount)
 }
 
 func waitInCaseOfError(numRetrials *int) {

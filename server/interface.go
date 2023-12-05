@@ -8,6 +8,6 @@ import (
 
 // TxSender defines a tx sender for bridge operations
 type TxSender interface {
-	SendTx(ctx context.Context, data *sovereign.BridgeOperations) ([]string, error)
+	SendTxs(ctx context.Context, data *sovereign.BridgeOperations) ([]string, error)
 	IsInterfaceNil() bool
 }
