@@ -37,6 +37,8 @@ const (
 	envGRPCPort             = "GRPC_PORT"
 	envWallet               = "WALLET_PATH"
 	envPassword             = "WALLET_PASSWORD"
+	envBridgeSCAddr         = "BRIDGE_SC_ADDRESS"
+	envMultiversXProxy      = "MULTIVERSX_PROXY"
 	envMaxRetrialsWaitNonce = "MAX_RETRIALS_WAIT_NONCE"
 )
 
@@ -114,8 +116,8 @@ func loadConfig() (*config.ServerConfig, error) {
 	grpcPort := os.Getenv(envGRPCPort)
 	walletPath := os.Getenv(envWallet)
 	walletPassword := os.Getenv(envPassword)
-	bridgeSCAddress := os.Getenv("BRIDGE_SC_ADDRESS")
-	proxy := os.Getenv("MULTIVERSX_PROXY")
+	bridgeSCAddress := os.Getenv(envBridgeSCAddr)
+	proxy := os.Getenv(envMultiversXProxy)
 	maxRetrialsWaitNonceStr := os.Getenv(envMaxRetrialsWaitNonce)
 
 	maxRetrialsWaitNonce, err := strconv.Atoi(maxRetrialsWaitNonceStr)

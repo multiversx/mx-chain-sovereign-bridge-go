@@ -10,6 +10,7 @@ import (
 	"github.com/multiversx/mx-sdk-go/interactors"
 )
 
+// CreateTxSender creates a new transactions sender
 func CreateTxSender(wallet core.CryptoComponentsHolder, cfg TxSenderConfig) (*txSender, error) {
 	args := blockchain.ArgsProxy{
 		ProxyURL:            cfg.Proxy,

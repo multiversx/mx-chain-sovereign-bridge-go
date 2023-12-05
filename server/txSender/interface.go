@@ -17,6 +17,7 @@ type TxInteractor interface {
 	IsInterfaceNil() bool
 }
 
+// Proxy defines the proxy to interact with MultiversX blockchain
 type Proxy interface {
 	GetAccount(ctx context.Context, address core.AddressHandler) (*data.Account, error)
 	GetNetworkConfig(ctx context.Context) (*data.NetworkConfig, error)

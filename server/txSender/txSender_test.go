@@ -156,6 +156,7 @@ func TestTxSender_SendTxsWithRetrialsShouldWork(t *testing.T) {
 	args := createArgs()
 
 	getAccCalledCt := 0
+	expectedTxHashes := []string{"hash"}
 	args.Proxy = &testscommon.ProxyMock{
 		GetAccountCalled: func(ctx context.Context, address core.AddressHandler) (*data.Account, error) {
 			var nonce uint64
@@ -189,9 +190,15 @@ func TestTxSender_SendTxsWithRetrialsShouldWork(t *testing.T) {
 			return [][]byte{[]byte("txData")}
 		},
 	}
+	args.TxInteractor = &testscommon.TxInteractorMock{
+		SendTransactionsAsBunchCalled: func(ctx context.Context, bunchSize int) ([]string, error) {
+			require.Equal(t, 1, bunchSize)
+			return expectedTxHashes, nil
+		},
+	}
 
 	ts, _ := NewTxSender(args)
-	_, err := ts.SendTxs(context.Background(), &sovereign.BridgeOperations{
+	txHashes, err := ts.SendTxs(context.Background(), &sovereign.BridgeOperations{
 		Data: []*sovereign.BridgeOutGoingData{
 			{
 				Hash: []byte("bridgeDataHash1"),
@@ -200,6 +207,7 @@ func TestTxSender_SendTxsWithRetrialsShouldWork(t *testing.T) {
 	})
 	require.Nil(t, err)
 	require.Equal(t, 7, getAccCalledCt)
+	require.Equal(t, expectedTxHashes, txHashes)
 }
 
 func TestTxSender_SendTxsWithRetrialsShouldFail(t *testing.T) {
@@ -238,7 +246,7 @@ func TestTxSender_SendTxsWithRetrialsShouldFail(t *testing.T) {
 	}
 
 	ts, _ := NewTxSender(args)
-	_, err := ts.SendTxs(context.Background(), &sovereign.BridgeOperations{
+	txHashes, err := ts.SendTxs(context.Background(), &sovereign.BridgeOperations{
 		Data: []*sovereign.BridgeOutGoingData{
 			{
 				Hash: []byte("bridgeDataHash1"),
@@ -248,6 +256,7 @@ func TestTxSender_SendTxsWithRetrialsShouldFail(t *testing.T) {
 	require.ErrorIs(t, err, errCannotGetAccount)
 	require.Equal(t, 3, getAccCalledCt)
 	require.True(t, strings.Contains(err.Error(), "after 2 retrials"))
+	require.Nil(t, txHashes)
 }
 
 func TestTxSender_SendTxsConcurrently(t *testing.T) {

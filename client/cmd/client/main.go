@@ -101,7 +101,7 @@ func sendData(bridgeClient client.ClientHandler) error {
 				return
 			}
 
-			saveTxHashes(res.TxHashes, txHashes, &mut, &wg)
+			addTxHashes(res.TxHashes, txHashes, &mut, &wg)
 		}()
 	}
 
@@ -116,7 +116,7 @@ func sendData(bridgeClient client.ClientHandler) error {
 	return nil
 }
 
-func saveTxHashes(txHashes []string, txHashesMap map[string]struct{}, mut *sync.RWMutex, wg *sync.WaitGroup) {
+func addTxHashes(txHashes []string, txHashesMap map[string]struct{}, mut *sync.RWMutex, wg *sync.WaitGroup) {
 	for _, txHash := range txHashes {
 		log.Info("received", "tx hash", txHash)
 
