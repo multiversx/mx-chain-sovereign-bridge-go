@@ -1,7 +1,6 @@
 package txSender
 
 import (
-	"context"
 	"time"
 
 	"github.com/multiversx/mx-sdk-go/blockchain"
@@ -26,11 +25,6 @@ func CreateTxSender(wallet core.CryptoComponentsHolder, cfg TxSenderConfig) (*tx
 		return nil, err
 	}
 
-	netConfigs, err := proxy.GetNetworkConfig(context.Background())
-	if err != nil {
-		return nil, err
-	}
-
 	txBuilder, err := builders.NewTxBuilder(cryptoProvider.NewSigner())
 	if err != nil {
 		return nil, err
@@ -44,7 +38,6 @@ func CreateTxSender(wallet core.CryptoComponentsHolder, cfg TxSenderConfig) (*tx
 	return NewTxSender(TxSenderArgs{
 		Wallet:          wallet,
 		Proxy:           proxy,
-		NetConfigs:      netConfigs,
 		TxInteractor:    ti,
 		DataFormatter:   NewDataFormatter(),
 		SCBridgeAddress: cfg.BridgeSCAddress,

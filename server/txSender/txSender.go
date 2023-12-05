@@ -10,7 +10,6 @@ import (
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	transaction2 "github.com/multiversx/mx-chain-core-go/data/transaction"
-	"github.com/multiversx/mx-sdk-go/blockchain"
 	"github.com/multiversx/mx-sdk-go/core"
 	"github.com/multiversx/mx-sdk-go/data"
 )
@@ -23,8 +22,7 @@ const (
 // TxSenderArgs holds args to create a new tx sender
 type TxSenderArgs struct {
 	Wallet          core.CryptoComponentsHolder
-	Proxy           blockchain.Proxy
-	NetConfigs      *data.NetworkConfig
+	Proxy           Proxy
 	TxInteractor    TxInteractor
 	DataFormatter   DataFormatter
 	SCBridgeAddress string
@@ -32,7 +30,7 @@ type TxSenderArgs struct {
 
 type txSender struct {
 	wallet          core.CryptoComponentsHolder
-	proxy           blockchain.Proxy
+	proxy           Proxy
 	netConfigs      *data.NetworkConfig
 	txInteractor    TxInteractor
 	dataFormatter   DataFormatter
@@ -43,23 +41,9 @@ type txSender struct {
 
 // NewTxSender creates a new tx sender
 func NewTxSender(args TxSenderArgs) (*txSender, error) {
-	if check.IfNil(args.Wallet) {
-		return nil, errNilWallet
-	}
-	if check.IfNil(args.Proxy) {
-		return nil, errNilProxy
-	}
-	if check.IfNil(args.TxInteractor) {
-		return nil, errNilTxInteractor
-	}
-	if check.IfNil(args.DataFormatter) {
-		return nil, errNilDataFormatter
-	}
-	if len(args.SCBridgeAddress) == 0 {
-		return nil, errNoSCBridgeAddress
-	}
-	if args.NetConfigs == nil {
-		return nil, errNilNetworkConfigs
+	err := checkArgs(args)
+	if err != nil {
+		return nil, err
 	}
 
 	account, err := args.Proxy.GetAccount(context.Background(), args.Wallet.GetAddressHandler())
@@ -67,17 +51,40 @@ func NewTxSender(args TxSenderArgs) (*txSender, error) {
 		return nil, err
 	}
 
-	ts := &txSender{
+	networkConfig, err := args.Proxy.GetNetworkConfig(context.Background())
+	if err != nil {
+		return nil, err
+	}
+
+	return &txSender{
 		wallet:          args.Wallet,
 		proxy:           args.Proxy,
-		netConfigs:      args.NetConfigs,
+		netConfigs:      networkConfig,
 		txInteractor:    args.TxInteractor,
 		dataFormatter:   args.DataFormatter,
 		scBridgeAddress: args.SCBridgeAddress,
 		waitNonce:       account.Nonce,
+	}, nil
+}
+
+func checkArgs(args TxSenderArgs) error {
+	if check.IfNil(args.Wallet) {
+		return errNilWallet
+	}
+	if check.IfNil(args.Proxy) {
+		return errNilProxy
+	}
+	if check.IfNil(args.TxInteractor) {
+		return errNilTxInteractor
+	}
+	if check.IfNil(args.DataFormatter) {
+		return errNilDataFormatter
+	}
+	if len(args.SCBridgeAddress) == 0 {
+		return errNoSCBridgeAddress
 	}
 
-	return ts, nil
+	return nil
 }
 
 // SendTx should send bridge data operation txs
@@ -110,10 +117,10 @@ func (ts *txSender) createTxs(data *sovereign.BridgeOperations, account *data.Ac
 		tx := &transaction2.FrontendTransaction{
 			Nonce:    nonce,
 			Value:    "1",
-			Receiver: ts.scBridgeAddress, // todo
+			Receiver: ts.scBridgeAddress,
 			Sender:   ts.wallet.GetBech32(),
-			GasPrice: ts.netConfigs.MinGasPrice, // todo
-			GasLimit: 50_000_000,                // todo
+			GasPrice: ts.netConfigs.MinGasPrice,
+			GasLimit: 50_000_000, // todo
 			Data:     txData,
 			ChainID:  ts.netConfigs.ChainID,
 			Version:  ts.netConfigs.MinTransactionVersion,
