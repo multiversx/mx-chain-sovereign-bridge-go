@@ -120,6 +120,31 @@ func (ts *txSender) SendTxs(ctx context.Context, data *sovereign.BridgeOperation
 	return txHashes, nil
 }
 
+func (ts *txSender) getUpdatedAccount(ctx context.Context) (*data.Account, error) {
+	numRetrials := 0
+	for numRetrials < ts.maxRetrialsGetAccount {
+		acc, err := ts.proxy.GetAccount(ctx, ts.wallet.GetAddressHandler())
+		if err != nil {
+			log.Error("txSender.waitForNonce", "error", err)
+
+			waitInCaseOfError(&numRetrials)
+			continue
+		}
+
+		if acc.Nonce == ts.waitNonce {
+			return acc, nil
+		}
+
+		log.Debug("txSender.getUpdatedAccount, waiting for account nonce update",
+			"account nonce", acc.Nonce, "expected nonce", ts.waitNonce)
+
+		time.Sleep(time.Second)
+		numRetrials++
+	}
+
+	return nil, fmt.Errorf("%w after %d retrials", errCannotGetAccount, ts.maxRetrialsGetAccount)
+}
+
 func (ts *txSender) createTxs(data *sovereign.BridgeOperations, account *data.Account) (int, error) {
 	txsData := ts.dataFormatter.CreateTxsData(data)
 	nonce := account.Nonce
@@ -146,31 +171,6 @@ func (ts *txSender) createTxs(data *sovereign.BridgeOperations, account *data.Ac
 	}
 
 	return int(nonce - account.Nonce), nil
-}
-
-func (ts *txSender) getUpdatedAccount(ctx context.Context) (*data.Account, error) {
-	numRetrials := 0
-	for numRetrials < ts.maxRetrialsGetAccount {
-		acc, err := ts.proxy.GetAccount(ctx, ts.wallet.GetAddressHandler())
-		if err != nil {
-			log.Error("txSender.waitForNonce", "error", err)
-
-			waitInCaseOfError(&numRetrials)
-			continue
-		}
-
-		if acc.Nonce == ts.waitNonce {
-			return acc, nil
-		}
-
-		log.Debug("txSender.getUpdatedAccount, waiting for account nonce update",
-			"account nonce", acc.Nonce, "expected nonce", ts.waitNonce)
-
-		time.Sleep(time.Second)
-		numRetrials++
-	}
-
-	return nil, fmt.Errorf("%w after %d retrials", errCannotGetAccount, ts.maxRetrialsGetAccount)
 }
 
 func waitInCaseOfError(numRetrials *int) {
