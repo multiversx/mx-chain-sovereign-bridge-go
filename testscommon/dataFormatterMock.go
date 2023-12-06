@@ -4,8 +4,7 @@ import "github.com/multiversx/mx-chain-core-go/data/sovereign"
 
 // DataFormatterMock mocks DataFormatter interface
 type DataFormatterMock struct {
-	CreateTxsDataCalled  func(data *sovereign.BridgeOperations) [][]byte
-	IsInterfaceNilCalled func() bool
+	CreateTxsDataCalled func(data *sovereign.BridgeOperations) [][]byte
 }
 
 // CreateTxsData mocks the CreateTxsData method
