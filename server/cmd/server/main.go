@@ -1,6 +1,8 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"net"
 	"os"
@@ -9,12 +11,15 @@ import (
 	"syscall"
 	"time"
 
+	"google.golang.org/grpc/credentials"
+
 	"github.com/joho/godotenv"
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-core-go/core/closing"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/multiversx/mx-chain-logger-go/file"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/cert"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/cmd/config"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/txSender"
@@ -73,7 +78,41 @@ func startServer(ctx *cli.Context) error {
 		return err
 	}
 
-	grpcServer := grpc.NewServer()
+	certCfg, err := cert.GenerateCert()
+	if err != nil {
+		return err
+	}
+
+	CertPool := x509.NewCertPool()
+
+	//certLeaf, err := x509.ParseCertificate(certCfg.Certificate[0])
+	//if err != nil {
+	//	return err
+	//}
+
+	tlsConfig := &tls.Config{
+		Certificates: []tls.Certificate{*certCfg},
+		ClientCAs:    CertPool,
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+	}
+
+	certt, err := cert.LoadCertificate("certificate.crt", "private_key.pem")
+	if err != nil {
+		return err
+	}
+	certLeaf, err := x509.ParseCertificate(certt.Certificate[0])
+	if err != nil {
+		return err
+	}
+	CertPool.AddCert(certLeaf)
+	tlsConfig = &tls.Config{
+		Certificates: []tls.Certificate{certt},
+		ClientCAs:    CertPool,
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+	}
+	grpcServer := grpc.NewServer(
+		grpc.Creds(credentials.NewTLS(tlsConfig)),
+	)
 	bridgeServer, err := server.CreateServer(cfg)
 	if err != nil {
 		return err
