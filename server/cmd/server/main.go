@@ -78,25 +78,7 @@ func startServer(ctx *cli.Context) error {
 		return err
 	}
 
-	certCfg, err := cert.GenerateCert()
-	if err != nil {
-		return err
-	}
-
-	CertPool := x509.NewCertPool()
-
-	//certLeaf, err := x509.ParseCertificate(certCfg.Certificate[0])
-	//if err != nil {
-	//	return err
-	//}
-
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{*certCfg},
-		ClientCAs:    CertPool,
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-	}
-
-	certt, err := cert.LoadCertificate("certificate.crt", "private_key.pem")
+	certt, err := cert.LoadCertificate("../../../cert/certificate.crt", "../../../cert/private_key.pem")
 	if err != nil {
 		return err
 	}
@@ -104,8 +86,9 @@ func startServer(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
+	CertPool := x509.NewCertPool()
 	CertPool.AddCert(certLeaf)
-	tlsConfig = &tls.Config{
+	tlsConfig := &tls.Config{
 		Certificates: []tls.Certificate{certt},
 		ClientCAs:    CertPool,
 		ClientAuth:   tls.RequireAndVerifyClientCert,

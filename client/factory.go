@@ -36,7 +36,7 @@ func CreateClient(cfg *config.ClientConfig) (ClientHandler, error) {
 func connectWithRetrials(host string) (GRPCConn, error) {
 	//credentials := insecure.NewCredentials()
 	//opts := grpc.WithTransportCredentials(credentials)
-	certt, err := cert.LoadCertificate("certificate.crt", "private_key.pem")
+	certt, err := cert.LoadCertificate("../../../cert/certificate.crt", "../../../cert/private_key.pem")
 	if err != nil {
 		return nil, err
 	}

@@ -10,59 +10,49 @@ import (
 	"math/big"
 	"os"
 	"time"
+
+	logger "github.com/multiversx/mx-chain-logger-go"
 )
 
-func GenerateCert() (*tls.Certificate, error) {
-	pk, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		return nil, err
-	}
+var log = logger.GetOrCreate("cert")
 
-	template := &x509.Certificate{
-		SerialNumber: big.NewInt(1),
-		Subject: pkix.Name{
-			Organization: []string{"MultiversX"},
-			CommonName:   "Username", // Will be checked by the server
-		},
-		NotBefore:             time.Now(),
-		NotAfter:              time.Now().Add(time.Hour),
-		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth},
-		BasicConstraintsValid: true,
-	}
-
-	cert, err := x509.CreateCertificate(rand.Reader, template, template, pk.Public(), pk)
-	if err != nil {
-		return nil, err
-	}
-
-	tlsCert := tls.Certificate{
-		Certificate: [][]byte{cert},
-		PrivateKey:  pk,
-	}
-
-	return &tlsCert, nil
-
-	//conn, err := grpc.DialContext(ctx, net.JoinHostPort(addr, port),
-	//	grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)),
-	//)
+type CertificateCfg struct {
+	CertCfg     CertCfg
+	CertFileCfg CertFileCfg
 }
 
-func GenerateCertFile() error {
+type CertCfg struct {
+	Organization string
+	DNSName      string
+	Availability int64
+}
+
+type CertFileCfg struct {
+	OutFileCert string
+	OutFilePk   string
+}
+
+func GenerateCert(cfg CertCfg) ([]byte, *rsa.PrivateKey, error) {
 	pk, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
-		return err
+		return nil, nil, err
+	}
+
+	serialNumberLimit := new(big.Int).Lsh(big.NewInt(1), 128)
+	serialNumber, err := rand.Int(rand.Reader, serialNumberLimit)
+	if err != nil {
+		return nil, nil, err
 	}
 
 	template := &x509.Certificate{
-		SerialNumber: big.NewInt(1),
+		SerialNumber: serialNumber,
 		Subject: pkix.Name{
-			Organization: []string{"MultiversX"},
-			CommonName:   "MultiversX Bridge", // Will be checked by the server
+			Organization: []string{cfg.Organization},
+			CommonName:   cfg.Organization,
 		},
-		DNSNames:              []string{"localhost"},
+		DNSNames:              []string{cfg.DNSName},
 		NotBefore:             time.Now(),
-		NotAfter:              time.Now().Add(time.Hour),
+		NotAfter:              time.Now().Add(time.Duration(cfg.Availability) * time.Hour),
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
@@ -70,26 +60,46 @@ func GenerateCertFile() error {
 
 	cert, err := x509.CreateCertificate(rand.Reader, template, template, pk.Public(), pk)
 	if err != nil {
-		return err
+		return nil, nil, err
 	}
 
-	certFile := "certificate.crt"
-	keyFile := "private_key.pem"
+	return cert, pk, nil
+}
 
-	certOut, err := os.Create(certFile)
+func GenerateCertFile(cfg CertificateCfg) error {
+	cert, pk, err := GenerateCert(cfg.CertCfg)
 	if err != nil {
 		return err
 	}
-	defer certOut.Close()
-	pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: cert})
 
-	keyOut, err := os.Create(keyFile)
+	certOut, err := os.Create(cfg.CertFileCfg.OutFileCert)
 	if err != nil {
 		return err
 	}
-	defer keyOut.Close()
+	defer func() {
+		err = certOut.Close()
+		log.LogIfError(err)
+	}()
+
+	err = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: cert})
+	if err != nil {
+		return err
+	}
+
+	keyOut, err := os.Create(cfg.CertFileCfg.OutFilePk)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = keyOut.Close()
+		log.LogIfError(err)
+	}()
+
 	privBytes := x509.MarshalPKCS1PrivateKey(pk)
-	pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: privBytes})
+	err = pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: privBytes})
+	if err != nil {
+		return err
+	}
 
 	return nil
 }
