@@ -18,7 +18,7 @@ var log = logger.GetOrCreate("cert")
 
 type CertificateCfg struct {
 	CertCfg     CertCfg
-	CertFileCfg CertFileCfg
+	CertFileCfg FileCfg
 }
 
 type CertCfg struct {
@@ -27,7 +27,7 @@ type CertCfg struct {
 	Availability int64
 }
 
-type CertFileCfg struct {
+type FileCfg struct {
 	CertFile string
 	PkFile   string
 }
@@ -104,7 +104,7 @@ func GenerateCertFile(cfg CertificateCfg) error {
 	return nil
 }
 
-func CreateTLSServerConfig(cfg CertFileCfg) (*tls.Config, error) {
+func CreateTLSServerConfig(cfg FileCfg) (*tls.Config, error) {
 	cert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.PkFile)
 	if err != nil {
 		return nil, err
@@ -122,7 +122,7 @@ func CreateTLSServerConfig(cfg CertFileCfg) (*tls.Config, error) {
 	}, nil
 }
 
-func CreateTLSClientConfig(cfg CertFileCfg) (*tls.Config, error) {
+func CreateTLSClientConfig(cfg FileCfg) (*tls.Config, error) {
 	cert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.PkFile)
 	if err != nil {
 		return nil, err

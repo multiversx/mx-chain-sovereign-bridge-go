@@ -43,6 +43,8 @@ const (
 	envBridgeSCAddr         = "BRIDGE_SC_ADDRESS"
 	envMultiversXProxy      = "MULTIVERSX_PROXY"
 	envMaxRetrialsWaitNonce = "MAX_RETRIALS_WAIT_NONCE"
+	envCertFile             = "CERT_FILE"
+	envCertPkFile           = "CERT_PK_FILE"
 )
 
 func main() {
@@ -76,16 +78,14 @@ func startServer(ctx *cli.Context) error {
 		return err
 	}
 
-	tlsConfig, err := cert.CreateTLSServerConfig(cert.CertFileCfg{
-		CertFile: "../../../cert/certificate.crt",
-		PkFile:   "../../../cert/private_key.pem",
-	})
+	tlsConfig, err := cert.CreateTLSServerConfig(cfg.CertificateConfig)
 	if err != nil {
 		return err
 	}
+	tlsCredentials := credentials.NewTLS(tlsConfig)
 
 	grpcServer := grpc.NewServer(
-		grpc.Creds(credentials.NewTLS(tlsConfig)),
+		grpc.Creds(tlsCredentials),
 	)
 	bridgeServer, err := server.CreateServer(cfg)
 	if err != nil {
@@ -132,6 +132,8 @@ func loadConfig() (*config.ServerConfig, error) {
 	bridgeSCAddress := os.Getenv(envBridgeSCAddr)
 	proxy := os.Getenv(envMultiversXProxy)
 	maxRetrialsWaitNonceStr := os.Getenv(envMaxRetrialsWaitNonce)
+	certFile := os.Getenv(envCertFile)
+	certPkFile := os.Getenv(envCertPkFile)
 
 	maxRetrialsWaitNonce, err := strconv.Atoi(maxRetrialsWaitNonceStr)
 	if err != nil {
@@ -143,6 +145,9 @@ func loadConfig() (*config.ServerConfig, error) {
 	log.Info("loaded config", "proxy", proxy)
 	log.Info("loaded config", "maxRetrialsWaitNonce", maxRetrialsWaitNonce)
 
+	log.Info("loaded config", "certificate file", certFile)
+	log.Info("loaded config", "certificate pk", certPkFile)
+
 	return &config.ServerConfig{
 		GRPCPort: grpcPort,
 		WalletConfig: txSender.WalletConfig{
@@ -153,6 +158,10 @@ func loadConfig() (*config.ServerConfig, error) {
 			BridgeSCAddress:      bridgeSCAddress,
 			Proxy:                proxy,
 			MaxRetrialsWaitNonce: maxRetrialsWaitNonce,
+		},
+		CertificateConfig: cert.FileCfg{
+			CertFile: certFile,
+			PkFile:   certPkFile,
 		},
 	}, nil
 }

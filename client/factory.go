@@ -22,7 +22,7 @@ var log = logger.GetOrCreate("client")
 // CreateClient creates a grpc client with retrials
 func CreateClient(cfg *config.ClientConfig) (ClientHandler, error) {
 	dialTarget := fmt.Sprintf("%s:%s", cfg.GRPCHost, cfg.GRPCPort)
-	conn, err := connectWithRetrials(dialTarget)
+	conn, err := connectWithRetrials(dialTarget, cfg.CertificateCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -31,25 +31,23 @@ func CreateClient(cfg *config.ClientConfig) (ClientHandler, error) {
 	return NewClient(bridgeClient, conn)
 }
 
-func connectWithRetrials(host string) (GRPCConn, error) {
-	tlsConfig, err := cert.CreateTLSClientConfig(cert.CertFileCfg{
-		CertFile: "../../../cert/certificate.crt",
-		PkFile:   "../../../cert/private_key.pem",
-	})
+func connectWithRetrials(host string, cfg cert.FileCfg) (GRPCConn, error) {
+	tlsConfig, err := cert.CreateTLSClientConfig(cfg)
 	if err != nil {
 		return nil, err
 	}
 
 	for i := 0; ; i++ {
-		cc, err := grpc.Dial(host, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
-		if err == nil {
-			return cc, err
+		tlsCredentials := credentials.NewTLS(tlsConfig)
+		cc, errConnection := grpc.Dial(host, grpc.WithTransportCredentials(tlsCredentials))
+		if errConnection == nil {
+			return cc, errConnection
 		}
 
 		time.Sleep(time.Second * waitTime)
 
 		log.Warn("could not establish connection, retrying",
-			"error", err,
+			"error", errConnection,
 			"host", host,
 			"retrial", i+1)
 	}

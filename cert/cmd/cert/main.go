@@ -13,7 +13,7 @@ func main() {
 			DNSName:      "localhost",
 			Availability: 10,
 		},
-		CertFileCfg: cert.CertFileCfg{
+		CertFileCfg: cert.FileCfg{
 			CertFile: "certificate.crt",
 			PkFile:   "private_key.pem",
 		},
