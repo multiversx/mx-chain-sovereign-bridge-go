@@ -78,7 +78,7 @@ func startServer(ctx *cli.Context) error {
 		return err
 	}
 
-	tlsConfig, err := cert.CreateTLSServerConfig(cfg.CertificateConfig)
+	tlsConfig, err := cert.LoadTLSServerConfig(cfg.CertificateConfig)
 	if err != nil {
 		return err
 	}

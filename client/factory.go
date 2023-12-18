@@ -32,7 +32,7 @@ func CreateClient(cfg *config.ClientConfig) (ClientHandler, error) {
 }
 
 func connectWithRetrials(host string, cfg cert.FileCfg) (GRPCConn, error) {
-	tlsConfig, err := cert.CreateTLSClientConfig(cfg)
+	tlsConfig, err := cert.LoadTLSClientConfig(cfg)
 	if err != nil {
 		return nil, err
 	}

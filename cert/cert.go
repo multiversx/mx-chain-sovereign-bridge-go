@@ -16,17 +16,20 @@ import (
 
 var log = logger.GetOrCreate("cert")
 
+// CertificateCfg holds necessary config to generate certificate files
 type CertificateCfg struct {
 	CertCfg     CertCfg
 	CertFileCfg FileCfg
 }
 
+// CertCfg holds necessary config to generate a certificate and private key
 type CertCfg struct {
 	Organization string
 	DNSName      string
 	Availability int64
 }
 
+// FileCfg holds necessary config for certificate files
 type FileCfg struct {
 	CertFile string
 	PkFile   string
@@ -34,6 +37,7 @@ type FileCfg struct {
 
 const day = time.Hour * 24
 
+// GenerateCert will generate a certificate and private key with specified configuration
 func GenerateCert(cfg CertCfg) ([]byte, *rsa.PrivateKey, error) {
 	pk, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
@@ -68,7 +72,8 @@ func GenerateCert(cfg CertCfg) ([]byte, *rsa.PrivateKey, error) {
 	return cert, pk, nil
 }
 
-func GenerateCertFile(cfg CertificateCfg) error {
+// GenerateCertFiles will generate a certificate and private key files with specified configuration
+func GenerateCertFiles(cfg CertificateCfg) error {
 	cert, pk, err := GenerateCert(cfg.CertCfg)
 	if err != nil {
 		return err
@@ -106,7 +111,8 @@ func GenerateCertFile(cfg CertificateCfg) error {
 	return nil
 }
 
-func CreateTLSServerConfig(cfg FileCfg) (*tls.Config, error) {
+// LoadTLSServerConfig will load a tls server config
+func LoadTLSServerConfig(cfg FileCfg) (*tls.Config, error) {
 	cert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.PkFile)
 	if err != nil {
 		return nil, err
@@ -124,7 +130,8 @@ func CreateTLSServerConfig(cfg FileCfg) (*tls.Config, error) {
 	}, nil
 }
 
-func CreateTLSClientConfig(cfg FileCfg) (*tls.Config, error) {
+// LoadTLSClientConfig will load a tls client config
+func LoadTLSClientConfig(cfg FileCfg) (*tls.Config, error) {
 	cert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.PkFile)
 	if err != nil {
 		return nil, err

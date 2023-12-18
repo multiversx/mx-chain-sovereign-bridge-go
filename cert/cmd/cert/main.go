@@ -44,7 +44,7 @@ func generateCertificate(ctx *cli.Context) error {
 	dns := ctx.GlobalString(dnsFlag.Name)
 	availability := ctx.GlobalInt64(availabilityFlag.Name)
 
-	err := cert.GenerateCertFile(cert.CertificateCfg{
+	err := cert.GenerateCertFiles(cert.CertificateCfg{
 		CertCfg: cert.CertCfg{
 			Organization: organization,
 			DNSName:      dns,
