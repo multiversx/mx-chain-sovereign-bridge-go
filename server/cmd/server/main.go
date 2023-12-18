@@ -82,8 +82,8 @@ func startServer(ctx *cli.Context) error {
 	if err != nil {
 		return err
 	}
-	tlsCredentials := credentials.NewTLS(tlsConfig)
 
+	tlsCredentials := credentials.NewTLS(tlsConfig)
 	grpcServer := grpc.NewServer(
 		grpc.Creds(tlsCredentials),
 	)

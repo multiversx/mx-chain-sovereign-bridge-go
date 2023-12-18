@@ -32,6 +32,8 @@ type FileCfg struct {
 	PkFile   string
 }
 
+const day = time.Hour * 24
+
 func GenerateCert(cfg CertCfg) ([]byte, *rsa.PrivateKey, error) {
 	pk, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
@@ -52,7 +54,7 @@ func GenerateCert(cfg CertCfg) ([]byte, *rsa.PrivateKey, error) {
 		},
 		DNSNames:              []string{cfg.DNSName},
 		NotBefore:             time.Now(),
-		NotAfter:              time.Now().Add(time.Duration(cfg.Availability) * time.Hour),
+		NotAfter:              time.Now().Add(time.Duration(cfg.Availability) * day),
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth},
 		BasicConstraintsValid: true,
