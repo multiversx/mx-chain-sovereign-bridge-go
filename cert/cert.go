@@ -28,8 +28,8 @@ type CertCfg struct {
 }
 
 type CertFileCfg struct {
-	OutFileCert string
-	OutFilePk   string
+	CertFile string
+	PkFile   string
 }
 
 func GenerateCert(cfg CertCfg) ([]byte, *rsa.PrivateKey, error) {
@@ -72,7 +72,7 @@ func GenerateCertFile(cfg CertificateCfg) error {
 		return err
 	}
 
-	certOut, err := os.Create(cfg.CertFileCfg.OutFileCert)
+	certOut, err := os.Create(cfg.CertFileCfg.CertFile)
 	if err != nil {
 		return err
 	}
@@ -86,7 +86,7 @@ func GenerateCertFile(cfg CertificateCfg) error {
 		return err
 	}
 
-	keyOut, err := os.Create(cfg.CertFileCfg.OutFilePk)
+	keyOut, err := os.Create(cfg.CertFileCfg.PkFile)
 	if err != nil {
 		return err
 	}
@@ -95,8 +95,8 @@ func GenerateCertFile(cfg CertificateCfg) error {
 		log.LogIfError(err)
 	}()
 
-	privBytes := x509.MarshalPKCS1PrivateKey(pk)
-	err = pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: privBytes})
+	pkBytes := x509.MarshalPKCS1PrivateKey(pk)
+	err = pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: pkBytes})
 	if err != nil {
 		return err
 	}
@@ -104,10 +104,49 @@ func GenerateCertFile(cfg CertificateCfg) error {
 	return nil
 }
 
-func LoadCertificate(certFile, keyFile string) (tls.Certificate, error) {
-	cert, err := tls.LoadX509KeyPair(certFile, keyFile)
+func CreateTLSServerConfig(cfg CertFileCfg) (*tls.Config, error) {
+	cert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.PkFile)
 	if err != nil {
-		return tls.Certificate{}, err
+		return nil, err
 	}
-	return cert, nil
+
+	certPool, err := createCertPool(cert)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		ClientCAs:    certPool,
+		ClientAuth:   tls.RequireAndVerifyClientCert,
+	}, nil
+}
+
+func CreateTLSClientConfig(cfg CertFileCfg) (*tls.Config, error) {
+	cert, err := tls.LoadX509KeyPair(cfg.CertFile, cfg.PkFile)
+	if err != nil {
+		return nil, err
+	}
+
+	certPool, err := createCertPool(cert)
+	if err != nil {
+		return nil, err
+	}
+
+	return &tls.Config{
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      certPool,
+	}, nil
+}
+
+func createCertPool(cert tls.Certificate) (*x509.CertPool, error) {
+	certLeaf, err := x509.ParseCertificate(cert.Certificate[0])
+	if err != nil {
+		return nil, err
+	}
+
+	certPool := x509.NewCertPool()
+	certPool.AddCert(certLeaf)
+
+	return certPool, nil
 }

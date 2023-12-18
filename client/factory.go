@@ -1,8 +1,6 @@
 package client
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"time"
 
@@ -34,26 +32,15 @@ func CreateClient(cfg *config.ClientConfig) (ClientHandler, error) {
 }
 
 func connectWithRetrials(host string) (GRPCConn, error) {
-	//credentials := insecure.NewCredentials()
-	//opts := grpc.WithTransportCredentials(credentials)
-	certt, err := cert.LoadCertificate("../../../cert/certificate.crt", "../../../cert/private_key.pem")
+	tlsConfig, err := cert.CreateTLSClientConfig(cert.CertFileCfg{
+		CertFile: "../../../cert/certificate.crt",
+		PkFile:   "../../../cert/private_key.pem",
+	})
 	if err != nil {
 		return nil, err
 	}
-	certLeaf, err := x509.ParseCertificate(certt.Certificate[0])
-	if err != nil {
-		return nil, err
-	}
 
-	CertPool := x509.NewCertPool()
-	CertPool.AddCert(certLeaf)
-
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{certt},
-		RootCAs:      CertPool,
-	}
-
-	for i := 0; i < maxConnectionRetrials; i++ {
+	for i := 0; ; i++ {
 		cc, err := grpc.Dial(host, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
 		if err == nil {
 			return cc, err
@@ -66,6 +53,4 @@ func connectWithRetrials(host string) (GRPCConn, error) {
 			"host", host,
 			"retrial", i+1)
 	}
-
-	return nil, errCannotOpenConnection
 }

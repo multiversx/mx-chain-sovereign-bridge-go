@@ -1,8 +1,6 @@
 package main
 
 import (
-	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"net"
 	"os"
@@ -78,21 +76,14 @@ func startServer(ctx *cli.Context) error {
 		return err
 	}
 
-	certt, err := cert.LoadCertificate("../../../cert/certificate.crt", "../../../cert/private_key.pem")
+	tlsConfig, err := cert.CreateTLSServerConfig(cert.CertFileCfg{
+		CertFile: "../../../cert/certificate.crt",
+		PkFile:   "../../../cert/private_key.pem",
+	})
 	if err != nil {
 		return err
 	}
-	certLeaf, err := x509.ParseCertificate(certt.Certificate[0])
-	if err != nil {
-		return err
-	}
-	CertPool := x509.NewCertPool()
-	CertPool.AddCert(certLeaf)
-	tlsConfig := &tls.Config{
-		Certificates: []tls.Certificate{certt},
-		ClientCAs:    CertPool,
-		ClientAuth:   tls.RequireAndVerifyClientCert,
-	}
+
 	grpcServer := grpc.NewServer(
 		grpc.Creds(credentials.NewTLS(tlsConfig)),
 	)

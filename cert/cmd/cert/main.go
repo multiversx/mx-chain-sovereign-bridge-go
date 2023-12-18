@@ -14,8 +14,8 @@ func main() {
 			Availability: 10,
 		},
 		CertFileCfg: cert.CertFileCfg{
-			OutFileCert: "certificate.crt",
-			OutFilePk:   "private_key.pem",
+			CertFile: "certificate.crt",
+			PkFile:   "private_key.pem",
 		},
 	})
 	fmt.Println(err)
