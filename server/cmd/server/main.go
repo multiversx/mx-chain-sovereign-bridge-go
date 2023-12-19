@@ -16,6 +16,7 @@ import (
 	"github.com/multiversx/mx-chain-logger-go/file"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/cmd/config"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/txSender"
 
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
@@ -25,11 +26,16 @@ var log = logger.GetOrCreate("sov-bridge-sender")
 
 const (
 	retrialTimeServe = 1
-	envGRPCPort      = "GRPC_PORT"
 	logsPath         = "logs"
 	logsPrefix       = "sov-bridge-sender"
 	logLifeSpanMb    = 1024   //# 1GB
 	logLifeSpanSec   = 432000 // 5 days
+)
+
+const (
+	envGRPCPort = "GRPC_PORT"
+	envWallet   = "WALLET_PATH"
+	envPassword = "WALLET_PASSWORD"
 )
 
 func main() {
@@ -104,11 +110,17 @@ func loadConfig() (*config.ServerConfig, error) {
 	}
 
 	grpcPort := os.Getenv(envGRPCPort)
+	walletPath := os.Getenv(envWallet)
+	walletPassword := os.Getenv(envPassword)
 
 	log.Info("loaded config", "grpc port", grpcPort)
 
 	return &config.ServerConfig{
 		GRPCPort: grpcPort,
+		WalletConfig: txSender.WalletConfig{
+			Path:     walletPath,
+			Password: walletPassword,
+		},
 	}, nil
 }
 
