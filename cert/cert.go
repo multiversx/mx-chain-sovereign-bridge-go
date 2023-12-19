@@ -7,6 +7,7 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"fmt"
 	"math/big"
 	"os"
 	"time"
@@ -81,7 +82,7 @@ func GenerateCertFiles(cfg CertificateCfg) error {
 
 	certOut, err := os.Create(cfg.CertFileCfg.CertFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot create certificate file, cert file: %s,error: %w", cfg.CertFileCfg.CertFile, err)
 	}
 	defer func() {
 		err = certOut.Close()
@@ -90,12 +91,12 @@ func GenerateCertFiles(cfg CertificateCfg) error {
 
 	err = pem.Encode(certOut, &pem.Block{Type: "CERTIFICATE", Bytes: cert})
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot create pem encoded file, cert file: %s,error: %w", cfg.CertFileCfg.CertFile, err)
 	}
 
 	keyOut, err := os.Create(cfg.CertFileCfg.PkFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot create certificate private key file, cert pk file: %s,error: %w", cfg.CertFileCfg.PkFile, err)
 	}
 	defer func() {
 		err = keyOut.Close()
@@ -105,7 +106,7 @@ func GenerateCertFiles(cfg CertificateCfg) error {
 	pkBytes := x509.MarshalPKCS1PrivateKey(pk)
 	err = pem.Encode(keyOut, &pem.Block{Type: "RSA PRIVATE KEY", Bytes: pkBytes})
 	if err != nil {
-		return err
+		return fmt.Errorf("cannot create certificate pk file, cert pk file: %s,error: %w", cfg.CertFileCfg.PkFile, err)
 	}
 
 	return nil

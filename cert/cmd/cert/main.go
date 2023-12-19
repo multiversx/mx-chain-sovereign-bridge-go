@@ -59,6 +59,6 @@ func generateCertificate(ctx *cli.Context) error {
 		return err
 	}
 
-	log.Info("generated files successfully")
+	log.Info("generated certificate files successfully")
 	return nil
 }

@@ -13,8 +13,7 @@ import (
 )
 
 const (
-	maxConnectionRetrials = 100
-	waitTime              = 5
+	waitTime = 5
 )
 
 var log = logger.GetOrCreate("client")
