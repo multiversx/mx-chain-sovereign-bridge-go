@@ -2,15 +2,19 @@ package main
 
 import (
 	"fmt"
-	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
 	"google.golang.org/grpc/credentials"
 
+	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-core-go/core/closing"
@@ -62,6 +66,33 @@ func main() {
 	}
 }
 
+type Handler struct {
+	ginHandler     *gin.Engine
+	grpcwebHandler *grpc.Server
+}
+
+func NewHandler(grpcwebHandler *grpc.Server) *Handler {
+	router := gin.Default()
+	router.GET("/home", home2)
+
+	return &Handler{
+		ginHandler:     router,
+		grpcwebHandler: grpcwebHandler,
+	}
+}
+
+func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+	contentType := req.Header.Get("Content-Type")
+	log.Info("dsada", "dsa", contentType)
+	if strings.HasPrefix(contentType, "application/grpc") {
+		h.grpcwebHandler.ServeHTTP(w, req)
+		log.Info("GRPC")
+		return
+	}
+	log.Info("HTTPS")
+	h.ginHandler.ServeHTTP(w, req)
+}
+
 func startServer(ctx *cli.Context) error {
 	cfg, err := loadConfig()
 	if err != nil {
@@ -73,10 +104,8 @@ func startServer(ctx *cli.Context) error {
 		return err
 	}
 
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.GRPCPort))
-	if err != nil {
-		return err
-	}
+	httpMux := http.NewServeMux()
+	httpMux.HandleFunc("/", home)
 
 	tlsConfig, err := cert.LoadTLSServerConfig(cfg.CertificateConfig)
 	if err != nil {
@@ -95,13 +124,32 @@ func startServer(ctx *cli.Context) error {
 	sovereign.RegisterBridgeTxSenderServer(grpcServer, bridgeServer)
 	log.Info("starting server...")
 
+	mixedHandler := newHTTPandGRPCMux(httpMux, grpcServer)
+	http1Server := &http.Server{Handler: h2c.NewHandler(mixedHandler, &http2.Server{})}
+	_ = http1Server
+	//listener, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.GRPCPort))
+	//if err != nil {
+	//	return err
+	//}
+
+	//_ = listener
+	//NewHandler(grpcServer)
+
 	go func() {
-		for {
-			if err = grpcServer.Serve(listener); err != nil {
-				log.LogIfError(err)
-				time.Sleep(retrialTimeServe * time.Second)
-			}
+		//if err = http.ListenAndServeTLS(":8085", "certificate.crt", "private_key.pem", NewHandler(grpcServer)); err != nil {
+		if err = http.ListenAndServe(":8085", NewHandler(grpcServer)); err != nil {
+			log.LogIfError(err)
+			time.Sleep(retrialTimeServe * time.Second)
 		}
+		//for {
+		//
+		//
+		//
+		//	//if err = grpcServer.Serve(listener); err != nil {
+		//	//	log.LogIfError(err)
+		//	//	time.Sleep(retrialTimeServe * time.Second)
+		//	//}
+		//}
 	}()
 
 	interrupt := make(chan os.Signal, 1)
@@ -118,6 +166,25 @@ func startServer(ctx *cli.Context) error {
 	}
 
 	return nil
+}
+
+func home(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "hello from http handler!\n")
+}
+
+func home2(ctx *gin.Context) {
+	log.Info("HOMEEE")
+}
+
+func newHTTPandGRPCMux(httpHand http.Handler, grpcHandler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		contentType := r.Header.Get("Content-Type")
+		if strings.HasPrefix(contentType, "application/grpc") {
+			grpcHandler.ServeHTTP(w, r)
+			return
+		}
+		httpHand.ServeHTTP(w, r)
+	})
 }
 
 func loadConfig() (*config.ServerConfig, error) {
