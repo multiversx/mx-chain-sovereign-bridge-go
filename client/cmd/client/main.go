@@ -98,6 +98,8 @@ func sendData(bridgeClient client.ClientHandler) error {
 			})
 			if errSend != nil {
 				log.Error("error sending bridge data", "error", errSend)
+				wg.Done()
+				return
 			}
 
 			addTxHashes(res.TxHashes, txHashes, &mut, &wg)

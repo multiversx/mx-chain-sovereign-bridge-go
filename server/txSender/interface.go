@@ -29,3 +29,9 @@ type DataFormatter interface {
 	CreateTxsData(data *sovereign.BridgeOperations) [][]byte
 	IsInterfaceNil() bool
 }
+
+type TxNonceSenderHandler interface {
+	GetNonce(ctx context.Context, address core.AddressHandler) (uint64, error)
+	SendTransaction(ctx context.Context, tx *transaction.FrontendTransaction) (string, error)
+	IsInterfaceNil() bool
+}

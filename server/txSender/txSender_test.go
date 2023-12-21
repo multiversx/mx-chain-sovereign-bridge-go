@@ -2,9 +2,7 @@ package txSender
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"strings"
 	"sync"
 	"testing"
 
@@ -18,12 +16,11 @@ import (
 
 func createArgs() TxSenderArgs {
 	return TxSenderArgs{
-		Wallet:                &testscommon.CryptoComponentsHolderMock{},
-		Proxy:                 &testscommon.ProxyMock{},
-		TxInteractor:          &testscommon.TxInteractorMock{},
-		DataFormatter:         &testscommon.DataFormatterMock{},
-		SCBridgeAddress:       "erd1qqq",
-		MaxRetrialsGetAccount: 10,
+		Wallet:          &testscommon.CryptoComponentsHolderMock{},
+		Proxy:           &testscommon.ProxyMock{},
+		TxInteractor:    &testscommon.TxInteractorMock{},
+		DataFormatter:   &testscommon.DataFormatterMock{},
+		SCBridgeAddress: "erd1qqq",
 	}
 }
 
@@ -61,14 +58,6 @@ func TestNewTxSender(t *testing.T) {
 		ts, err := NewTxSender(args)
 		require.Nil(t, ts)
 		require.Equal(t, errNilDataFormatter, err)
-	})
-	t.Run("no wait time", func(t *testing.T) {
-		args := createArgs()
-		args.MaxRetrialsGetAccount = 0
-
-		ts, err := NewTxSender(args)
-		require.Nil(t, ts)
-		require.Equal(t, errZeroTimeWaitAccountNonceUpdate, err)
 	})
 	t.Run("should work", func(t *testing.T) {
 		args := createArgs()
@@ -147,116 +136,6 @@ func TestTxSender_SendTxs(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, expectedTxHashes, txHashes)
 	require.Equal(t, 3, expectedNonce)
-	require.Equal(t, uint64(3), ts.waitNonce)
-}
-
-func TestTxSender_SendTxsWithRetrialsShouldWork(t *testing.T) {
-	t.Parallel()
-
-	args := createArgs()
-
-	getAccCalledCt := 0
-	expectedTxHashes := []string{"hash"}
-	args.Proxy = &testscommon.ProxyMock{
-		GetAccountCalled: func(ctx context.Context, address core.AddressHandler) (*data.Account, error) {
-			var nonce uint64
-			var err error
-
-			switch getAccCalledCt {
-			case 0:
-				nonce = 4
-				err = nil
-			case 1, 2, 3:
-				nonce = 3
-				err = errors.New("cannot get account")
-			case 4, 5:
-				nonce = 3
-				err = nil
-			case 6:
-				nonce = 4
-				err = nil
-			default:
-				require.Fail(t, "should not call get account anymore")
-			}
-
-			getAccCalledCt++
-			return &data.Account{
-				Nonce: nonce,
-			}, err
-		},
-	}
-	args.DataFormatter = &testscommon.DataFormatterMock{
-		CreateTxsDataCalled: func(data *sovereign.BridgeOperations) [][]byte {
-			return [][]byte{[]byte("txData")}
-		},
-	}
-	args.TxInteractor = &testscommon.TxInteractorMock{
-		SendTransactionsAsBunchCalled: func(ctx context.Context, bunchSize int) ([]string, error) {
-			require.Equal(t, 1, bunchSize)
-			return expectedTxHashes, nil
-		},
-	}
-
-	ts, _ := NewTxSender(args)
-	txHashes, err := ts.SendTxs(context.Background(), &sovereign.BridgeOperations{
-		Data: []*sovereign.BridgeOutGoingData{
-			{
-				Hash: []byte("bridgeDataHash1"),
-			},
-		},
-	})
-	require.Nil(t, err)
-	require.Equal(t, 7, getAccCalledCt)
-	require.Equal(t, expectedTxHashes, txHashes)
-}
-
-func TestTxSender_SendTxsWithRetrialsShouldFail(t *testing.T) {
-	t.Parallel()
-
-	args := createArgs()
-
-	getAccCalledCt := 0
-	args.MaxRetrialsGetAccount = 2
-	args.Proxy = &testscommon.ProxyMock{
-		GetAccountCalled: func(ctx context.Context, address core.AddressHandler) (*data.Account, error) {
-			var nonce uint64
-			var err error
-
-			switch getAccCalledCt {
-			case 0:
-				nonce = 4
-				err = nil
-			case 1, 2, 3:
-				nonce = 3
-				err = nil
-			default:
-				require.Fail(t, "should not call get account anymore")
-			}
-
-			getAccCalledCt++
-			return &data.Account{
-				Nonce: nonce,
-			}, err
-		},
-	}
-	args.DataFormatter = &testscommon.DataFormatterMock{
-		CreateTxsDataCalled: func(data *sovereign.BridgeOperations) [][]byte {
-			return [][]byte{[]byte("txData")}
-		},
-	}
-
-	ts, _ := NewTxSender(args)
-	txHashes, err := ts.SendTxs(context.Background(), &sovereign.BridgeOperations{
-		Data: []*sovereign.BridgeOutGoingData{
-			{
-				Hash: []byte("bridgeDataHash1"),
-			},
-		},
-	})
-	require.ErrorIs(t, err, errCannotGetAccount)
-	require.Equal(t, 3, getAccCalledCt)
-	require.True(t, strings.Contains(err.Error(), "after 2 retrials"))
-	require.Nil(t, txHashes)
 }
 
 func TestTxSender_SendTxsConcurrently(t *testing.T) {

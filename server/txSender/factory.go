@@ -8,6 +8,7 @@ import (
 	"github.com/multiversx/mx-sdk-go/builders"
 	"github.com/multiversx/mx-sdk-go/core"
 	"github.com/multiversx/mx-sdk-go/interactors"
+	"github.com/multiversx/mx-sdk-go/interactors/nonceHandlerV1"
 )
 
 // CreateTxSender creates a new transactions sender
@@ -26,6 +27,15 @@ func CreateTxSender(wallet core.CryptoComponentsHolder, cfg TxSenderConfig) (*tx
 		return nil, err
 	}
 
+	nonceHandler, err := nonceHandlerV1.NewNonceTransactionHandlerV1(
+		proxy,
+		time.Second*time.Duration(cfg.MaxRetrialsWaitNonce),
+		false,
+	)
+	if err != nil {
+		return nil, err
+	}
+
 	txBuilder, err := builders.NewTxBuilder(cryptoProvider.NewSigner())
 	if err != nil {
 		return nil, err
@@ -37,11 +47,11 @@ func CreateTxSender(wallet core.CryptoComponentsHolder, cfg TxSenderConfig) (*tx
 	}
 
 	return NewTxSender(TxSenderArgs{
-		Wallet:                wallet,
-		Proxy:                 proxy,
-		TxInteractor:          ti,
-		DataFormatter:         NewDataFormatter(),
-		SCBridgeAddress:       cfg.BridgeSCAddress,
-		MaxRetrialsGetAccount: cfg.MaxRetrialsWaitNonce,
+		Wallet:          wallet,
+		Proxy:           proxy,
+		TxInteractor:    ti,
+		TxNonceHandler:  nonceHandler,
+		DataFormatter:   NewDataFormatter(),
+		SCBridgeAddress: cfg.BridgeSCAddress,
 	})
 }
