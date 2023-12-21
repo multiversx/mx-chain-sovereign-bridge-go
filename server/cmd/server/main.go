@@ -10,8 +10,9 @@ import (
 	"syscall"
 	"time"
 
-	"golang.org/x/net/http2"
-	"golang.org/x/net/http2/h2c"
+	"github.com/gorilla/websocket"
+	"github.com/multiversx/mx-chain-core-go/marshal"
+	"github.com/multiversx/mx-chain-go/api/logs"
 	"google.golang.org/grpc/credentials"
 
 	"github.com/gin-gonic/gin"
@@ -75,6 +76,8 @@ func NewHandler(grpcwebHandler *grpc.Server) *Handler {
 	router := gin.Default()
 	router.GET("/home", home2)
 
+	registerLoggerWsRoute(router, nil)
+
 	return &Handler{
 		ginHandler:     router,
 		grpcwebHandler: grpcwebHandler,
@@ -104,9 +107,6 @@ func startServer(ctx *cli.Context) error {
 		return err
 	}
 
-	httpMux := http.NewServeMux()
-	httpMux.HandleFunc("/", home)
-
 	tlsConfig, err := cert.LoadTLSServerConfig(cfg.CertificateConfig)
 	if err != nil {
 		return err
@@ -124,9 +124,6 @@ func startServer(ctx *cli.Context) error {
 	sovereign.RegisterBridgeTxSenderServer(grpcServer, bridgeServer)
 	log.Info("starting server...")
 
-	mixedHandler := newHTTPandGRPCMux(httpMux, grpcServer)
-	http1Server := &http.Server{Handler: h2c.NewHandler(mixedHandler, &http2.Server{})}
-	_ = http1Server
 	//listener, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.GRPCPort))
 	//if err != nil {
 	//	return err
@@ -136,8 +133,8 @@ func startServer(ctx *cli.Context) error {
 	//NewHandler(grpcServer)
 
 	go func() {
-		//if err = http.ListenAndServeTLS(":8085", "certificate.crt", "private_key.pem", NewHandler(grpcServer)); err != nil {
-		if err = http.ListenAndServe(":8085", NewHandler(grpcServer)); err != nil {
+		if err = http.ListenAndServeTLS(":8085", "certificate.crt", "private_key.pem", NewHandler(grpcServer)); err != nil {
+			//if err = http.ListenAndServe(":8085", NewHandler(grpcServer)); err != nil {
 			log.LogIfError(err)
 			time.Sleep(retrialTimeServe * time.Second)
 		}
@@ -168,22 +165,32 @@ func startServer(ctx *cli.Context) error {
 	return nil
 }
 
-func home(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "hello from http handler!\n")
-}
-
 func home2(ctx *gin.Context) {
 	log.Info("HOMEEE")
 }
 
-func newHTTPandGRPCMux(httpHand http.Handler, grpcHandler http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		contentType := r.Header.Get("Content-Type")
-		if strings.HasPrefix(contentType, "application/grpc") {
-			grpcHandler.ServeHTTP(w, r)
+// registerLoggerWsRoute will register the log route
+func registerLoggerWsRoute(ws *gin.Engine, marshalizer marshal.Marshalizer) {
+	upgrader := websocket.Upgrader{}
+
+	ws.GET("/log", func(c *gin.Context) {
+		upgrader.CheckOrigin = func(r *http.Request) bool {
+			return true
+		}
+
+		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
+		if err != nil {
+			log.Error(err.Error())
 			return
 		}
-		httpHand.ServeHTTP(w, r)
+
+		ls, err := logs.NewLogSender(marshalizer, conn, log)
+		if err != nil {
+			log.Error(err.Error())
+			return
+		}
+
+		ls.StartSendingBlocking()
 	})
 }
 

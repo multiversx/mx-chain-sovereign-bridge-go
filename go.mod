@@ -4,9 +4,11 @@ go 1.20
 
 require (
 	github.com/gin-gonic/gin v1.9.1
+	github.com/gorilla/websocket v1.5.0
 	github.com/joho/godotenv v1.5.1
 	github.com/multiversx/mx-chain-core-go v1.2.17-0.20231204120455-9672e1a91430
 	github.com/multiversx/mx-chain-crypto-go v1.2.8
+	github.com/multiversx/mx-chain-go v1.6.3
 	github.com/multiversx/mx-chain-logger-go v1.0.13
 	github.com/multiversx/mx-sdk-go v1.3.8
 	github.com/stretchr/testify v1.8.4
@@ -31,7 +33,6 @@ require (
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/google/uuid v1.3.1 // indirect
-	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
 	github.com/hashicorp/golang-lru v0.6.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.5 // indirect
@@ -42,7 +43,6 @@ require (
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/multiversx/concurrent-map v0.1.4 // indirect
 	github.com/multiversx/mx-chain-communication-go v1.0.8 // indirect
-	github.com/multiversx/mx-chain-go v1.6.3 // indirect
 	github.com/multiversx/mx-chain-storage-go v1.0.13 // indirect
 	github.com/multiversx/mx-chain-vm-common-go v1.5.5 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
@@ -59,8 +59,6 @@ require (
 	golang.org/x/net v0.14.0 // indirect
 	golang.org/x/sys v0.11.0 // indirect
 	golang.org/x/text v0.12.0 // indirect
-	google.golang.org/genproto v0.0.0-20230822172742-b8732ec3820d // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230822172742-b8732ec3820d // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
