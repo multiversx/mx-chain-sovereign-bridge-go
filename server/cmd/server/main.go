@@ -6,16 +6,12 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
-	"strings"
 	"syscall"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/multiversx/mx-chain-core-go/marshal"
-	"github.com/multiversx/mx-chain-go/api/logs"
 	"google.golang.org/grpc/credentials"
 
-	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-core-go/core/closing"
@@ -67,35 +63,6 @@ func main() {
 	}
 }
 
-type Handler struct {
-	ginHandler     *gin.Engine
-	grpcwebHandler *grpc.Server
-}
-
-func NewHandler(grpcwebHandler *grpc.Server) *Handler {
-	router := gin.Default()
-	router.GET("/home", home2)
-
-	registerLoggerWsRoute(router, nil)
-
-	return &Handler{
-		ginHandler:     router,
-		grpcwebHandler: grpcwebHandler,
-	}
-}
-
-func (h *Handler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
-	contentType := req.Header.Get("Content-Type")
-	log.Info("dsada", "dsa", contentType)
-	if strings.HasPrefix(contentType, "application/grpc") {
-		h.grpcwebHandler.ServeHTTP(w, req)
-		log.Info("GRPC")
-		return
-	}
-	log.Info("HTTPS")
-	h.ginHandler.ServeHTTP(w, req)
-}
-
 func startServer(ctx *cli.Context) error {
 	cfg, err := loadConfig()
 	if err != nil {
@@ -116,7 +83,7 @@ func startServer(ctx *cli.Context) error {
 	grpcServer := grpc.NewServer(
 		grpc.Creds(tlsCredentials),
 	)
-	bridgeServer, err := server.CreateServer(cfg)
+	bridgeServer, err := server.CreateSovereignBridgeServer(cfg)
 	if err != nil {
 		return err
 	}
@@ -124,29 +91,30 @@ func startServer(ctx *cli.Context) error {
 	sovereign.RegisterBridgeTxSenderServer(grpcServer, bridgeServer)
 	log.Info("starting server...")
 
-	//listener, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.GRPCPort))
-	//if err != nil {
-	//	return err
-	//}
+	ginHandler, err := server.NewGinHandler(&marshal.GogoProtoMarshalizer{})
+	if err != nil {
+		return err
+	}
 
-	//_ = listener
-	//NewHandler(grpcServer)
+	serverHandler, err := server.NewServerHandler(ginHandler, grpcServer)
+	if err != nil {
+		return err
+	}
 
 	go func() {
-		if err = http.ListenAndServeTLS(":8085", "certificate.crt", "private_key.pem", NewHandler(grpcServer)); err != nil {
-			//if err = http.ListenAndServe(":8085", NewHandler(grpcServer)); err != nil {
-			log.LogIfError(err)
-			time.Sleep(retrialTimeServe * time.Second)
+		for {
+			err = http.ListenAndServeTLS(
+				fmt.Sprintf(":%s", cfg.GRPCPort),
+				cfg.CertificateConfig.CertFile,
+				cfg.CertificateConfig.PkFile,
+				serverHandler,
+			)
+
+			if err != nil {
+				log.LogIfError(err)
+				time.Sleep(retrialTimeServe * time.Second)
+			}
 		}
-		//for {
-		//
-		//
-		//
-		//	//if err = grpcServer.Serve(listener); err != nil {
-		//	//	log.LogIfError(err)
-		//	//	time.Sleep(retrialTimeServe * time.Second)
-		//	//}
-		//}
 	}()
 
 	interrupt := make(chan os.Signal, 1)
@@ -163,35 +131,6 @@ func startServer(ctx *cli.Context) error {
 	}
 
 	return nil
-}
-
-func home2(ctx *gin.Context) {
-	log.Info("HOMEEE")
-}
-
-// registerLoggerWsRoute will register the log route
-func registerLoggerWsRoute(ws *gin.Engine, marshalizer marshal.Marshalizer) {
-	upgrader := websocket.Upgrader{}
-
-	ws.GET("/log", func(c *gin.Context) {
-		upgrader.CheckOrigin = func(r *http.Request) bool {
-			return true
-		}
-
-		conn, err := upgrader.Upgrade(c.Writer, c.Request, nil)
-		if err != nil {
-			log.Error(err.Error())
-			return
-		}
-
-		ls, err := logs.NewLogSender(marshalizer, conn, log)
-		if err != nil {
-			log.Error(err.Error())
-			return
-		}
-
-		ls.StartSendingBlocking()
-	})
 }
 
 func loadConfig() (*config.ServerConfig, error) {
