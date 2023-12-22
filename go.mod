@@ -10,7 +10,7 @@ require (
 	github.com/multiversx/mx-chain-crypto-go v1.2.8
 	github.com/multiversx/mx-chain-go v1.6.3
 	github.com/multiversx/mx-chain-logger-go v1.0.13
-	github.com/multiversx/mx-sdk-go v1.3.8
+	github.com/multiversx/mx-sdk-go v1.3.10-0.20231222110953-629ba2a78d97
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli v1.22.14
 	google.golang.org/grpc v1.59.0
