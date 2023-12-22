@@ -11,7 +11,7 @@ import (
 
 // TxInteractor defines a tx interactor with multiversx blockchain
 type TxInteractor interface {
-	ApplySignature(cryptoHolder core.CryptoComponentsHolder, tx *transaction.FrontendTransaction) error
+	ApplyUserSignature(cryptoHolder core.CryptoComponentsHolder, tx *transaction.FrontendTransaction) error
 	IsInterfaceNil() bool
 }
 
@@ -28,8 +28,9 @@ type DataFormatter interface {
 	IsInterfaceNil() bool
 }
 
+// TxNonceSenderHandler should handle nonce management and tx interactions
 type TxNonceSenderHandler interface {
-	GetNonce(ctx context.Context, address core.AddressHandler) (uint64, error)
+	ApplyNonceAndGasPrice(ctx context.Context, address core.AddressHandler, tx *transaction.FrontendTransaction) error
 	SendTransaction(ctx context.Context, tx *transaction.FrontendTransaction) (string, error)
 	IsInterfaceNil() bool
 }

@@ -7,14 +7,14 @@ import (
 
 // TxInteractorMock mocks TxInteractor interface
 type TxInteractorMock struct {
-	ApplySignatureCalled func(cryptoHolder core.CryptoComponentsHolder, tx *transaction.FrontendTransaction) error
-	IsInterfaceNilCalled func() bool
+	ApplyUserSignatureCalled func(cryptoHolder core.CryptoComponentsHolder, tx *transaction.FrontendTransaction) error
+	IsInterfaceNilCalled     func() bool
 }
 
-// ApplySignature mocks the ApplySignature method
-func (mock *TxInteractorMock) ApplySignature(cryptoHolder core.CryptoComponentsHolder, tx *transaction.FrontendTransaction) error {
-	if mock.ApplySignatureCalled != nil {
-		return mock.ApplySignatureCalled(cryptoHolder, tx)
+// ApplyUserSignature -
+func (mock *TxInteractorMock) ApplyUserSignature(cryptoHolder core.CryptoComponentsHolder, tx *transaction.FrontendTransaction) error {
+	if mock.ApplyUserSignatureCalled != nil {
+		return mock.ApplyUserSignatureCalled(cryptoHolder, tx)
 	}
 	return nil
 }

@@ -20,6 +20,7 @@ func createArgs() TxSenderArgs {
 		Proxy:           &testscommon.ProxyMock{},
 		TxInteractor:    &testscommon.TxInteractorMock{},
 		DataFormatter:   &testscommon.DataFormatterMock{},
+		TxNonceHandler:  &testscommon.TxNonceSenderHandlerMock{},
 		SCBridgeAddress: "erd1qqq",
 	}
 }
@@ -73,6 +74,7 @@ func TestTxSender_SendTxs(t *testing.T) {
 
 	expectedCtx := context.Background()
 	expectedNonce := 0
+	expectedDataIdx := 0
 	expectedTxHashes := []string{"txHash1", "txHash2", "txHash3"}
 	expectedTxsData := [][]byte{[]byte("txData1"), []byte("txData2"), []byte("txData3")}
 	expectedSigs := []string{"sig1", "sig2", "sig3"}
@@ -103,11 +105,35 @@ func TestTxSender_SendTxs(t *testing.T) {
 		},
 	}
 	args.TxInteractor = &testscommon.TxInteractorMock{
-		ApplySignatureCalled: func(cryptoHolder core.CryptoComponentsHolder, tx *transaction.FrontendTransaction) error {
-			tx.Signature = expectedSigs[expectedNonce]
+		ApplyUserSignatureCalled: func(cryptoHolder core.CryptoComponentsHolder, tx *transaction.FrontendTransaction) error {
+			tx.Signature = expectedSigs[expectedDataIdx]
 			return nil
 		},
-		AddTransactionCalled: func(tx *transaction.FrontendTransaction) {
+	}
+	args.TxNonceHandler = &testscommon.TxNonceSenderHandlerMock{
+		ApplyNonceAndGasPriceCalled: func(ctx context.Context, address core.AddressHandler, tx *transaction.FrontendTransaction) error {
+			require.Equal(t, &transaction.FrontendTransaction{
+				Nonce:    0,
+				Value:    "1",
+				Receiver: args.SCBridgeAddress,
+				Sender:   args.Wallet.GetBech32(),
+				GasPrice: expectedNetworkConfig.MinGasPrice,
+				GasLimit: 50_000_000,
+				Data:     expectedTxsData[expectedDataIdx],
+				ChainID:  expectedNetworkConfig.ChainID,
+				Version:  expectedNetworkConfig.MinTransactionVersion,
+			}, tx)
+
+			expectedNonce++
+			tx.Nonce = uint64(expectedNonce)
+			return nil
+		},
+		SendTransactionCalled: func(ctx context.Context, tx *transaction.FrontendTransaction) (string, error) {
+			defer func() {
+				expectedDataIdx++
+			}()
+
+			require.Equal(t, expectedCtx, ctx)
 			require.Equal(t, &transaction.FrontendTransaction{
 				Nonce:     uint64(expectedNonce),
 				Value:     "1",
@@ -115,19 +141,13 @@ func TestTxSender_SendTxs(t *testing.T) {
 				Sender:    args.Wallet.GetBech32(),
 				GasPrice:  expectedNetworkConfig.MinGasPrice,
 				GasLimit:  50_000_000,
-				Data:      expectedTxsData[expectedNonce],
-				Signature: expectedSigs[expectedNonce],
+				Data:      expectedTxsData[expectedDataIdx],
+				Signature: expectedSigs[expectedDataIdx],
 				ChainID:   expectedNetworkConfig.ChainID,
 				Version:   expectedNetworkConfig.MinTransactionVersion,
 			}, tx)
 
-			expectedNonce++
-		},
-		SendTransactionsAsBunchCalled: func(ctx context.Context, bunchSize int) ([]string, error) {
-			require.Equal(t, expectedCtx, ctx)
-			require.Equal(t, len(expectedTxHashes), bunchSize)
-
-			return expectedTxHashes, nil
+			return expectedTxHashes[expectedDataIdx], nil
 		},
 	}
 
@@ -136,6 +156,7 @@ func TestTxSender_SendTxs(t *testing.T) {
 	require.Nil(t, err)
 	require.Equal(t, expectedTxHashes, txHashes)
 	require.Equal(t, 3, expectedNonce)
+	require.Equal(t, 3, expectedDataIdx)
 }
 
 func TestTxSender_SendTxsConcurrently(t *testing.T) {
@@ -146,30 +167,26 @@ func TestTxSender_SendTxsConcurrently(t *testing.T) {
 	expectedTxHashes := []string{"hash"}
 	numTxsToSend := 1000
 	numSentTxs := 0
+
+	mut := sync.RWMutex{}
 	wg := sync.WaitGroup{}
 	wg.Add(numTxsToSend)
 
-	args.Proxy = &testscommon.ProxyMock{
-		GetAccountCalled: func(ctx context.Context, address core.AddressHandler) (*data.Account, error) {
-			return &data.Account{
-				Nonce: uint64(numSentTxs),
-			}, nil
-		},
-	}
 	args.DataFormatter = &testscommon.DataFormatterMock{
 		CreateTxsDataCalled: func(data *sovereign.BridgeOperations) [][]byte {
 			return [][]byte{[]byte("txData")}
 		},
 	}
-	args.TxInteractor = &testscommon.TxInteractorMock{
-		SendTransactionsAsBunchCalled: func(ctx context.Context, bunchSize int) ([]string, error) {
+	args.TxNonceHandler = &testscommon.TxNonceSenderHandlerMock{
+		SendTransactionCalled: func(ctx context.Context, tx *transaction.FrontendTransaction) (string, error) {
 			defer func() {
 				numSentTxs++
 				wg.Done()
+				mut.Unlock()
 			}()
 
-			require.Equal(t, 1, bunchSize)
-			return []string{"hash"}, nil
+			mut.Lock()
+			return "hash", nil
 		},
 	}
 

@@ -89,13 +89,7 @@ func (ts *txSender) createTxs(ctx context.Context, data *sovereign.BridgeOperati
 	txsData := ts.dataFormatter.CreateTxsData(data)
 
 	for _, txData := range txsData {
-		nonce, err := ts.txNonceHandler.GetNonce(ctx, ts.wallet.GetAddressHandler())
-		if err != nil {
-			return nil, err
-		}
-
 		tx := &coreTx.FrontendTransaction{
-			Nonce:    nonce,
 			Value:    "1",
 			Receiver: ts.scBridgeAddress,
 			Sender:   ts.wallet.GetBech32(),
@@ -106,7 +100,12 @@ func (ts *txSender) createTxs(ctx context.Context, data *sovereign.BridgeOperati
 			Version:  ts.netConfigs.MinTransactionVersion,
 		}
 
-		err = ts.txInteractor.ApplySignature(ts.wallet, tx)
+		err := ts.txNonceHandler.ApplyNonceAndGasPrice(ctx, ts.wallet.GetAddressHandler(), tx)
+		if err != nil {
+			return nil, err
+		}
+
+		err = ts.txInteractor.ApplyUserSignature(ts.wallet, tx)
 		if err != nil {
 			return nil, err
 		}
