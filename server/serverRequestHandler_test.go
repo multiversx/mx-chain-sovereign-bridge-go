@@ -3,6 +3,7 @@ package server
 import (
 	"bytes"
 	"context"
+	"encoding/hex"
 	"net"
 	"net/http"
 	"net/http/httptest"
@@ -86,9 +87,10 @@ func TestServerRequestsHandler_ServeHTTP(t *testing.T) {
 		ctx := context.Background()
 		dialOptWithCtx := grpc.WithContextDialer(
 			func(context.Context, string) (net.Conn, error) {
-				req := &sovereign.BridgeOperations{}
-				bytesReq := bytes.NewReader([]byte(req.String()))
-				grpcReq, _ := http.NewRequest("POST", "/sovereign.BridgeTxSender/Send", bytesReq)
+				bytesReq, err := hex.DecodeString("00000000500a4e0a06686173685f3412140a076f70486173683112096272696467654f703112140a076f70486173683212096272696467654f70321a0d6167677265676174656453696722096c6561646572536967")
+				require.Nil(t, err)
+
+				grpcReq, _ := http.NewRequest("POST", "/sovereign.BridgeTxSender/Send", bytes.NewReader(bytesReq))
 				grpcReq.Header.Set("Content-Type", "application/grpc")
 				grpcReq.ProtoMajor = 2
 				grpcReq.Proto = "HTTP/2.0"
