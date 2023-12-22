@@ -2,13 +2,14 @@ package main
 
 import (
 	"fmt"
-	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
 	"syscall"
 	"time"
 
+	"github.com/multiversx/mx-chain-core-go/marshal"
 	"google.golang.org/grpc/credentials"
 
 	"github.com/joho/godotenv"
@@ -73,11 +74,6 @@ func startServer(ctx *cli.Context) error {
 		return err
 	}
 
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.GRPCPort))
-	if err != nil {
-		return err
-	}
-
 	tlsConfig, err := cert.LoadTLSServerConfig(cfg.CertificateConfig)
 	if err != nil {
 		return err
@@ -87,7 +83,7 @@ func startServer(ctx *cli.Context) error {
 	grpcServer := grpc.NewServer(
 		grpc.Creds(tlsCredentials),
 	)
-	bridgeServer, err := server.CreateServer(cfg)
+	bridgeServer, err := server.CreateSovereignBridgeServer(cfg)
 	if err != nil {
 		return err
 	}
@@ -95,10 +91,26 @@ func startServer(ctx *cli.Context) error {
 	sovereign.RegisterBridgeTxSenderServer(grpcServer, bridgeServer)
 	log.Info("starting server...")
 
+	ginHandler, err := server.NewGinHandler(&marshal.GogoProtoMarshalizer{})
+	if err != nil {
+		return err
+	}
+
+	serverHandler, err := server.NewServerHandler(ginHandler, grpcServer)
+	if err != nil {
+		return err
+	}
+
 	go func() {
 		for {
-			if err = grpcServer.Serve(listener); err != nil {
-				log.LogIfError(err)
+			err = http.ListenAndServeTLS(
+				fmt.Sprintf(":%s", cfg.GRPCPort),
+				cfg.CertificateConfig.CertFile,
+				cfg.CertificateConfig.PkFile,
+				serverHandler,
+			)
+			if err != nil {
+				log.Error("sovereign bridge tx sender: ListenAndServeTLS", "error", err)
 				time.Sleep(retrialTimeServe * time.Second)
 			}
 		}
