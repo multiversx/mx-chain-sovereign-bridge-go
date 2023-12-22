@@ -63,11 +63,10 @@ func startClient(ctx *cli.Context) error {
 }
 
 func sendData(bridgeClient client.ClientHandler) error {
-
 	txHashes := make(map[string]struct{})
 	mut := sync.RWMutex{}
 
-	numBridgeOps := 4
+	numBridgeOps := 5
 	expectedNumBridgeTxs := 3 * numBridgeOps
 	wg := sync.WaitGroup{}
 	wg.Add(expectedNumBridgeTxs)
@@ -98,6 +97,8 @@ func sendData(bridgeClient client.ClientHandler) error {
 			})
 			if errSend != nil {
 				log.Error("error sending bridge data", "error", errSend)
+				wg.Done()
+				return
 			}
 
 			addTxHashes(res.TxHashes, txHashes, &mut, &wg)
