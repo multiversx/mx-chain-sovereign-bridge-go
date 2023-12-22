@@ -109,9 +109,8 @@ func startServer(ctx *cli.Context) error {
 				cfg.CertificateConfig.PkFile,
 				serverHandler,
 			)
-
 			if err != nil {
-				log.LogIfError(err)
+				log.Error("sovereign bridge tx sender: ListenAndServeTLS", "error", err)
 				time.Sleep(retrialTimeServe * time.Second)
 			}
 		}

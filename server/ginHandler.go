@@ -10,6 +10,7 @@ import (
 	"github.com/multiversx/mx-chain-go/api/logs"
 )
 
+// NewGinHandler will create a gin handler
 func NewGinHandler(marshaller marshal.Marshalizer) (*gin.Engine, error) {
 	if check.IfNilReflect(marshaller) {
 		return nil, errNilMarshaller
@@ -21,7 +22,6 @@ func NewGinHandler(marshaller marshal.Marshalizer) (*gin.Engine, error) {
 	return router, nil
 }
 
-// registerLoggerWsRoute will register the log route
 func registerLoggerWsRoute(ws *gin.Engine, marshaller marshal.Marshalizer) {
 	upgrader := websocket.Upgrader{}
 
