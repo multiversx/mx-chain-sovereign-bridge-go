@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	logger "github.com/multiversx/mx-chain-logger-go"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/cert"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/client"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/client/config"
 	"github.com/urfave/cli"
@@ -17,8 +18,10 @@ import (
 var log = logger.GetOrCreate("client-tx-sender")
 
 const (
-	envGRPCHost = "GRPC_HOST"
-	envGRPCPort = "GRPC_PORT"
+	envGRPCHost   = "GRPC_HOST"
+	envGRPCPort   = "GRPC_PORT"
+	envCertFile   = "CERT_FILE"
+	envCertPkFile = "CERT_PK_FILE"
 )
 
 func main() {
@@ -136,13 +139,22 @@ func loadConfig() (*config.ClientConfig, error) {
 
 	grpcHost := os.Getenv(envGRPCHost)
 	grpcPort := os.Getenv(envGRPCPort)
+	certFile := os.Getenv(envCertFile)
+	certPkFile := os.Getenv(envCertPkFile)
 
 	log.Info("loaded config", "grpc host", grpcHost)
 	log.Info("loaded config", "grpc port", grpcPort)
 
+	log.Info("loaded config", "certificate file", certFile)
+	log.Info("loaded config", "certificate pk", certPkFile)
+
 	return &config.ClientConfig{
 		GRPCHost: grpcHost,
 		GRPCPort: grpcPort,
+		CertificateCfg: cert.FileCfg{
+			CertFile: certFile,
+			PkFile:   certPkFile,
+		},
 	}, nil
 }
 
