@@ -63,7 +63,6 @@ func startClient(ctx *cli.Context) error {
 }
 
 func sendData(bridgeClient client.ClientHandler) error {
-
 	txHashes := make(map[string]struct{})
 	mut := sync.RWMutex{}
 

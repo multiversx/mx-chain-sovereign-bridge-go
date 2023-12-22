@@ -81,10 +81,10 @@ func (ts *txSender) SendTxs(ctx context.Context, data *sovereign.BridgeOperation
 		return make([]string, 0), nil
 	}
 
-	return ts.createTxs(ctx, data)
+	return ts.createAndSendTxs(ctx, data)
 }
 
-func (ts *txSender) createTxs(ctx context.Context, data *sovereign.BridgeOperations) ([]string, error) {
+func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.BridgeOperations) ([]string, error) {
 	txHashes := make([]string, 0)
 	txsData := ts.dataFormatter.CreateTxsData(data)
 
