@@ -11,9 +11,7 @@ import (
 
 // TxInteractor defines a tx interactor with multiversx blockchain
 type TxInteractor interface {
-	AddTransaction(tx *transaction.FrontendTransaction)
-	ApplySignature(cryptoHolder core.CryptoComponentsHolder, tx *transaction.FrontendTransaction) error
-	SendTransactionsAsBunch(ctx context.Context, bunchSize int) ([]string, error)
+	ApplyUserSignature(cryptoHolder core.CryptoComponentsHolder, tx *transaction.FrontendTransaction) error
 	IsInterfaceNil() bool
 }
 
@@ -27,5 +25,12 @@ type Proxy interface {
 // DataFormatter should format txs data for bridge operations
 type DataFormatter interface {
 	CreateTxsData(data *sovereign.BridgeOperations) [][]byte
+	IsInterfaceNil() bool
+}
+
+// TxNonceSenderHandler should handle nonce management and tx interactions
+type TxNonceSenderHandler interface {
+	ApplyNonceAndGasPrice(ctx context.Context, address core.AddressHandler, tx *transaction.FrontendTransaction) error
+	SendTransaction(ctx context.Context, tx *transaction.FrontendTransaction) (string, error)
 	IsInterfaceNil() bool
 }
