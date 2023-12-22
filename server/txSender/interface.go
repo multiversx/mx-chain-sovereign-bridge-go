@@ -11,9 +11,7 @@ import (
 
 // TxInteractor defines a tx interactor with multiversx blockchain
 type TxInteractor interface {
-	AddTransaction(tx *transaction.FrontendTransaction)
 	ApplySignature(cryptoHolder core.CryptoComponentsHolder, tx *transaction.FrontendTransaction) error
-	SendTransactionsAsBunch(ctx context.Context, bunchSize int) ([]string, error)
 	IsInterfaceNil() bool
 }
 

@@ -65,6 +65,9 @@ func checkArgs(args TxSenderArgs) error {
 	if check.IfNil(args.DataFormatter) {
 		return errNilDataFormatter
 	}
+	if check.IfNil(args.TxNonceHandler) {
+		return errNilNonceHandler
+	}
 	if len(args.SCBridgeAddress) == 0 {
 		return errNoSCBridgeAddress
 	}
