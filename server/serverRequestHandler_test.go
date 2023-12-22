@@ -87,7 +87,8 @@ func TestServerRequestsHandler_ServeHTTP(t *testing.T) {
 		dialOptWithCtx := grpc.WithContextDialer(
 			func(context.Context, string) (net.Conn, error) {
 				req := &sovereign.BridgeOperations{}
-				grpcReq, _ := http.NewRequest("POST", "/sovereign.BridgeTxSender/Send", bytes.NewReader([]byte(req.String())))
+				bytesReq := bytes.NewReader([]byte(req.String()))
+				grpcReq, _ := http.NewRequest("POST", "/sovereign.BridgeTxSender/Send", bytesReq)
 				grpcReq.Header.Set("Content-Type", "application/grpc")
 				grpcReq.ProtoMajor = 2
 				grpcReq.Proto = "HTTP/2.0"
