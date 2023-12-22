@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
+	"sync"
 
 	"github.com/joho/godotenv"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
@@ -63,34 +63,68 @@ func startClient(ctx *cli.Context) error {
 }
 
 func sendData(bridgeClient client.ClientHandler) error {
-	for i := 0; i < 5; i++ {
+	txHashes := make(map[string]struct{})
+	mut := sync.RWMutex{}
+
+	numBridgeOps := 5
+	expectedNumBridgeTxs := 3 * numBridgeOps
+	wg := sync.WaitGroup{}
+	wg.Add(expectedNumBridgeTxs)
+
+	for i := 0; i < numBridgeOps; i++ {
 		hash := []byte(fmt.Sprintf("hash_%d", i))
 		log.Info("sending data", "hash", hash)
 
-		res, errSend := bridgeClient.Send(context.Background(), &sovereign.BridgeOperations{
-			Data: []*sovereign.BridgeOutGoingData{
-				{
-					Hash: hash,
-					OutGoingOperations: map[string][]byte{
-						"fc07": []byte("bridgeOp"),
+		go func() {
+			res, errSend := bridgeClient.Send(context.Background(), &sovereign.BridgeOperations{
+				Data: []*sovereign.BridgeOutGoingData{
+					{
+						Hash: hash,
+						OutGoingOperations: []*sovereign.OutGoingOperation{
+							{
+								Hash: []byte("opHash1"),
+								Data: []byte("bridgeOp1"),
+							},
+							{
+								Hash: []byte("opHash2"),
+								Data: []byte("bridgeOp2"),
+							},
+						},
+						AggregatedSignature: []byte("aggregatedSig"),
+						LeaderSignature:     []byte("leaderSig"),
 					},
 				},
-			},
-		})
-		if errSend != nil {
-			return errSend
-		}
+			})
+			if errSend != nil {
+				log.Error("error sending bridge data", "error", errSend)
+				wg.Done()
+				return
+			}
 
-		logTxHashes(res.TxHashes)
-		time.Sleep(time.Second)
+			addTxHashes(res.TxHashes, txHashes, &mut, &wg)
+		}()
+	}
+
+	wg.Wait()
+
+	numSentTxs := len(txHashes)
+	if numSentTxs != expectedNumBridgeTxs {
+		return fmt.Errorf("did not send all txs; expected num send txs: %d, received: %d",
+			expectedNumBridgeTxs, numSentTxs)
 	}
 
 	return nil
 }
 
-func logTxHashes(txHashes [][]byte) {
+func addTxHashes(txHashes []string, txHashesMap map[string]struct{}, mut *sync.RWMutex, wg *sync.WaitGroup) {
 	for _, txHash := range txHashes {
 		log.Info("received", "tx hash", txHash)
+
+		mut.Lock()
+		txHashesMap[txHash] = struct{}{}
+		mut.Unlock()
+
+		wg.Done()
 	}
 }
 
