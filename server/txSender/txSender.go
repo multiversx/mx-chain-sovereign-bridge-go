@@ -22,7 +22,6 @@ type TxSenderArgs struct {
 
 type txSender struct {
 	wallet          core.CryptoComponentsHolder
-	proxy           Proxy
 	netConfigs      *data.NetworkConfig
 	txInteractor    TxInteractor
 	txNonceHandler  TxNonceSenderHandler
