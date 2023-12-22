@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/golang/protobuf/proto"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/testscommon"
 	"github.com/stretchr/testify/require"
@@ -87,10 +86,8 @@ func TestServerRequestsHandler_ServeHTTP(t *testing.T) {
 		ctx := context.Background()
 		dialOptWithCtx := grpc.WithContextDialer(
 			func(context.Context, string) (net.Conn, error) {
-				serialized, err := proto.Marshal(&sovereign.BridgeOperations{})
-				require.Nil(t, err)
-
-				grpcReq, _ := http.NewRequest("POST", "/sovereign.BridgeTxSender/Send", bytes.NewReader(serialized))
+				req := &sovereign.BridgeOperations{}
+				grpcReq, _ := http.NewRequest("POST", "/sovereign.BridgeTxSender/Send", bytes.NewReader([]byte(req.String())))
 				grpcReq.Header.Set("Content-Type", "application/grpc")
 				grpcReq.ProtoMajor = 2
 				grpcReq.Proto = "HTTP/2.0"
