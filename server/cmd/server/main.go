@@ -5,6 +5,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
@@ -33,9 +34,12 @@ const (
 )
 
 const (
-	envGRPCPort = "GRPC_PORT"
-	envWallet   = "WALLET_PATH"
-	envPassword = "WALLET_PASSWORD"
+	envGRPCPort            = "GRPC_PORT"
+	envWallet              = "WALLET_PATH"
+	envPassword            = "WALLET_PASSWORD"
+	envBridgeSCAddr        = "BRIDGE_SC_ADDRESS"
+	envMultiversXProxy     = "MULTIVERSX_PROXY"
+	envMaxRetriesWaitNonce = "MAX_RETRIES_SECONDS_WAIT_NONCE"
 )
 
 func main() {
@@ -70,7 +74,7 @@ func startServer(ctx *cli.Context) error {
 	}
 
 	grpcServer := grpc.NewServer()
-	bridgeServer, err := server.NewSovereignBridgeTxServer()
+	bridgeServer, err := server.CreateServer(cfg)
 	if err != nil {
 		return err
 	}
@@ -112,14 +116,30 @@ func loadConfig() (*config.ServerConfig, error) {
 	grpcPort := os.Getenv(envGRPCPort)
 	walletPath := os.Getenv(envWallet)
 	walletPassword := os.Getenv(envPassword)
+	bridgeSCAddress := os.Getenv(envBridgeSCAddr)
+	proxy := os.Getenv(envMultiversXProxy)
+	maxRetriesWaitNonceStr := os.Getenv(envMaxRetriesWaitNonce)
+
+	maxRetriesWaitNonce, err := strconv.Atoi(maxRetriesWaitNonceStr)
+	if err != nil {
+		return nil, err
+	}
 
 	log.Info("loaded config", "grpc port", grpcPort)
+	log.Info("loaded config", "bridgeSCAddress", bridgeSCAddress)
+	log.Info("loaded config", "proxy", proxy)
+	log.Info("loaded config", "maxRetriesWaitNonce", maxRetriesWaitNonce)
 
 	return &config.ServerConfig{
 		GRPCPort: grpcPort,
 		WalletConfig: txSender.WalletConfig{
 			Path:     walletPath,
 			Password: walletPassword,
+		},
+		TxSenderConfig: txSender.TxSenderConfig{
+			BridgeSCAddress:            bridgeSCAddress,
+			Proxy:                      proxy,
+			MaxRetriesSecondsWaitNonce: maxRetriesWaitNonce,
 		},
 	}, nil
 }

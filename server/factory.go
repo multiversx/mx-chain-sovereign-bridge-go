@@ -8,10 +8,15 @@ import (
 
 // CreateServer creates a new bridge txs sender grpc server
 func CreateServer(cfg *config.ServerConfig) (sovereign.BridgeTxSenderServer, error) {
-	_, err := txSender.LoadWallet(cfg.WalletConfig)
+	wallet, err := txSender.LoadWallet(cfg.WalletConfig)
 	if err != nil {
 		return nil, err
 	}
 
-	return NewSovereignBridgeTxServer()
+	txSnd, err := txSender.CreateTxSender(wallet, cfg.TxSenderConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return NewSovereignBridgeTxServer(txSnd)
 }
