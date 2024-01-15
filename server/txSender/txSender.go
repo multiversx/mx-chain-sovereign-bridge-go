@@ -89,7 +89,7 @@ func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.Bridge
 
 	for _, txData := range txsData {
 		tx := &coreTx.FrontendTransaction{
-			Value:    "1",
+			Value:    "0",
 			Receiver: ts.scBridgeAddress,
 			Sender:   ts.wallet.GetBech32(),
 			GasPrice: ts.netConfigs.MinGasPrice,
