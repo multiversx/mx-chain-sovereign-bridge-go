@@ -12,16 +12,16 @@ import (
 )
 
 const (
-	maxConnectionRetrials = 100
-	waitTime              = 5
+	maxConnectionRetries = 100
+	waitTime             = 5
 )
 
 var log = logger.GetOrCreate("client")
 
-// CreateClient creates a grpc client with retrials
+// CreateClient creates a grpc client with retries
 func CreateClient(cfg *config.ClientConfig) (ClientHandler, error) {
 	dialTarget := fmt.Sprintf("%s:%s", cfg.GRPCHost, cfg.GRPCPort)
-	conn, err := connectWithRetrials(dialTarget)
+	conn, err := connectWithRetries(dialTarget)
 	if err != nil {
 		return nil, err
 	}
@@ -30,11 +30,11 @@ func CreateClient(cfg *config.ClientConfig) (ClientHandler, error) {
 	return NewClient(bridgeClient, conn)
 }
 
-func connectWithRetrials(host string) (GRPCConn, error) {
+func connectWithRetries(host string) (GRPCConn, error) {
 	credentials := insecure.NewCredentials()
 	opts := grpc.WithTransportCredentials(credentials)
 
-	for i := 0; i < maxConnectionRetrials; i++ {
+	for i := 0; i < maxConnectionRetries; i++ {
 		cc, err := grpc.Dial(host, opts)
 		if err == nil {
 			return cc, err
