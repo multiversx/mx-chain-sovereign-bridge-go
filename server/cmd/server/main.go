@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"net"
+	"net/http"
 	"os"
 	"os/signal"
 	"strconv"
@@ -13,6 +13,7 @@ import (
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-core-go/core/closing"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
+	"github.com/multiversx/mx-chain-core-go/marshal"
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/multiversx/mx-chain-logger-go/file"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/cert"
@@ -41,8 +42,8 @@ const (
 	envBridgeSCAddr        = "BRIDGE_SC_ADDRESS"
 	envMultiversXProxy     = "MULTIVERSX_PROXY"
 	envMaxRetriesWaitNonce = "MAX_RETRIES_SECONDS_WAIT_NONCE"
-	envCertFile             = "CERT_FILE"
-	envCertPkFile           = "CERT_PK_FILE"
+	envCertFile            = "CERT_FILE"
+	envCertPkFile          = "CERT_PK_FILE"
 )
 
 func main() {
@@ -71,11 +72,6 @@ func startServer(ctx *cli.Context) error {
 		return err
 	}
 
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%s", cfg.GRPCPort))
-	if err != nil {
-		return err
-	}
-
 	tlsConfig, err := cert.LoadTLSServerConfig(cfg.CertificateConfig)
 	if err != nil {
 		return err
@@ -85,7 +81,7 @@ func startServer(ctx *cli.Context) error {
 	grpcServer := grpc.NewServer(
 		grpc.Creds(tlsCredentials),
 	)
-	bridgeServer, err := server.CreateServer(cfg)
+	bridgeServer, err := server.CreateSovereignBridgeServer(cfg)
 	if err != nil {
 		return err
 	}
@@ -93,10 +89,26 @@ func startServer(ctx *cli.Context) error {
 	sovereign.RegisterBridgeTxSenderServer(grpcServer, bridgeServer)
 	log.Info("starting server...")
 
+	ginHandler, err := server.NewGinHandler(&marshal.GogoProtoMarshalizer{})
+	if err != nil {
+		return err
+	}
+
+	serverHandler, err := server.NewServerHandler(ginHandler, grpcServer)
+	if err != nil {
+		return err
+	}
+
 	go func() {
 		for {
-			if err = grpcServer.Serve(listener); err != nil {
-				log.LogIfError(err)
+			err = http.ListenAndServeTLS(
+				fmt.Sprintf(":%s", cfg.GRPCPort),
+				cfg.CertificateConfig.CertFile,
+				cfg.CertificateConfig.PkFile,
+				serverHandler,
+			)
+			if err != nil {
+				log.Error("sovereign bridge tx sender: ListenAndServeTLS", "error", err)
 				time.Sleep(retrialTimeServe * time.Second)
 			}
 		}
