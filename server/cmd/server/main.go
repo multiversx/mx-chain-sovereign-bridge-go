@@ -15,12 +15,13 @@ import (
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/multiversx/mx-chain-logger-go/file"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/cert"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/cmd/config"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/txSender"
-
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 var log = logger.GetOrCreate("sov-bridge-sender")
@@ -40,6 +41,8 @@ const (
 	envBridgeSCAddr        = "BRIDGE_SC_ADDRESS"
 	envMultiversXProxy     = "MULTIVERSX_PROXY"
 	envMaxRetriesWaitNonce = "MAX_RETRIES_SECONDS_WAIT_NONCE"
+	envCertFile             = "CERT_FILE"
+	envCertPkFile           = "CERT_PK_FILE"
 )
 
 func main() {
@@ -73,7 +76,15 @@ func startServer(ctx *cli.Context) error {
 		return err
 	}
 
-	grpcServer := grpc.NewServer()
+	tlsConfig, err := cert.LoadTLSServerConfig(cfg.CertificateConfig)
+	if err != nil {
+		return err
+	}
+
+	tlsCredentials := credentials.NewTLS(tlsConfig)
+	grpcServer := grpc.NewServer(
+		grpc.Creds(tlsCredentials),
+	)
 	bridgeServer, err := server.CreateServer(cfg)
 	if err != nil {
 		return err
@@ -119,6 +130,8 @@ func loadConfig() (*config.ServerConfig, error) {
 	bridgeSCAddress := os.Getenv(envBridgeSCAddr)
 	proxy := os.Getenv(envMultiversXProxy)
 	maxRetriesWaitNonceStr := os.Getenv(envMaxRetriesWaitNonce)
+	certFile := os.Getenv(envCertFile)
+	certPkFile := os.Getenv(envCertPkFile)
 
 	maxRetriesWaitNonce, err := strconv.Atoi(maxRetriesWaitNonceStr)
 	if err != nil {
@@ -130,6 +143,9 @@ func loadConfig() (*config.ServerConfig, error) {
 	log.Info("loaded config", "proxy", proxy)
 	log.Info("loaded config", "maxRetriesWaitNonce", maxRetriesWaitNonce)
 
+	log.Info("loaded config", "certificate file", certFile)
+	log.Info("loaded config", "certificate pk", certPkFile)
+
 	return &config.ServerConfig{
 		GRPCPort: grpcPort,
 		WalletConfig: txSender.WalletConfig{
@@ -140,6 +156,10 @@ func loadConfig() (*config.ServerConfig, error) {
 			BridgeSCAddress:            bridgeSCAddress,
 			Proxy:                      proxy,
 			MaxRetriesSecondsWaitNonce: maxRetriesWaitNonce,
+		},
+		CertificateConfig: cert.FileCfg{
+			CertFile: certFile,
+			PkFile:   certPkFile,
 		},
 	}, nil
 }
