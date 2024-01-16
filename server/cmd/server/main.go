@@ -13,6 +13,7 @@ import (
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-core-go/core/closing"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
+	"github.com/multiversx/mx-chain-core-go/marshal"
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/multiversx/mx-chain-logger-go/file"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/cert"
@@ -41,8 +42,8 @@ const (
 	envBridgeSCAddr        = "BRIDGE_SC_ADDRESS"
 	envMultiversXProxy     = "MULTIVERSX_PROXY"
 	envMaxRetriesWaitNonce = "MAX_RETRIES_SECONDS_WAIT_NONCE"
-	envCertFile             = "CERT_FILE"
-	envCertPkFile           = "CERT_PK_FILE"
+	envCertFile            = "CERT_FILE"
+	envCertPkFile          = "CERT_PK_FILE"
 )
 
 func main() {
