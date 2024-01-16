@@ -9,9 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/multiversx/mx-chain-core-go/marshal"
-	"google.golang.org/grpc/credentials"
-
 	"github.com/joho/godotenv"
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-core-go/core/closing"
@@ -22,9 +19,9 @@ import (
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/cmd/config"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/txSender"
-
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 )
 
 var log = logger.GetOrCreate("sov-bridge-sender")
@@ -38,12 +35,12 @@ const (
 )
 
 const (
-	envGRPCPort             = "GRPC_PORT"
-	envWallet               = "WALLET_PATH"
-	envPassword             = "WALLET_PASSWORD"
-	envBridgeSCAddr         = "BRIDGE_SC_ADDRESS"
-	envMultiversXProxy      = "MULTIVERSX_PROXY"
-	envMaxRetrialsWaitNonce = "MAX_RETRIALS_WAIT_NONCE"
+	envGRPCPort            = "GRPC_PORT"
+	envWallet              = "WALLET_PATH"
+	envPassword            = "WALLET_PASSWORD"
+	envBridgeSCAddr        = "BRIDGE_SC_ADDRESS"
+	envMultiversXProxy     = "MULTIVERSX_PROXY"
+	envMaxRetriesWaitNonce = "MAX_RETRIES_SECONDS_WAIT_NONCE"
 	envCertFile             = "CERT_FILE"
 	envCertPkFile           = "CERT_PK_FILE"
 )
@@ -143,11 +140,11 @@ func loadConfig() (*config.ServerConfig, error) {
 	walletPassword := os.Getenv(envPassword)
 	bridgeSCAddress := os.Getenv(envBridgeSCAddr)
 	proxy := os.Getenv(envMultiversXProxy)
-	maxRetrialsWaitNonceStr := os.Getenv(envMaxRetrialsWaitNonce)
+	maxRetriesWaitNonceStr := os.Getenv(envMaxRetriesWaitNonce)
 	certFile := os.Getenv(envCertFile)
 	certPkFile := os.Getenv(envCertPkFile)
 
-	maxRetrialsWaitNonce, err := strconv.Atoi(maxRetrialsWaitNonceStr)
+	maxRetriesWaitNonce, err := strconv.Atoi(maxRetriesWaitNonceStr)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +152,7 @@ func loadConfig() (*config.ServerConfig, error) {
 	log.Info("loaded config", "grpc port", grpcPort)
 	log.Info("loaded config", "bridgeSCAddress", bridgeSCAddress)
 	log.Info("loaded config", "proxy", proxy)
-	log.Info("loaded config", "maxRetrialsWaitNonce", maxRetrialsWaitNonce)
+	log.Info("loaded config", "maxRetriesWaitNonce", maxRetriesWaitNonce)
 
 	log.Info("loaded config", "certificate file", certFile)
 	log.Info("loaded config", "certificate pk", certPkFile)
@@ -167,9 +164,9 @@ func loadConfig() (*config.ServerConfig, error) {
 			Password: walletPassword,
 		},
 		TxSenderConfig: txSender.TxSenderConfig{
-			BridgeSCAddress:      bridgeSCAddress,
-			Proxy:                proxy,
-			MaxRetrialsWaitNonce: maxRetrialsWaitNonce,
+			BridgeSCAddress:            bridgeSCAddress,
+			Proxy:                      proxy,
+			MaxRetriesSecondsWaitNonce: maxRetriesWaitNonce,
 		},
 		CertificateConfig: cert.FileCfg{
 			CertFile: certFile,

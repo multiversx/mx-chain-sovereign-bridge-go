@@ -114,7 +114,7 @@ func TestTxSender_SendTxs(t *testing.T) {
 		ApplyNonceAndGasPriceCalled: func(ctx context.Context, address core.AddressHandler, tx *transaction.FrontendTransaction) error {
 			require.Equal(t, &transaction.FrontendTransaction{
 				Nonce:    0,
-				Value:    "1",
+				Value:    "0",
 				Receiver: args.SCBridgeAddress,
 				Sender:   args.Wallet.GetBech32(),
 				GasPrice: expectedNetworkConfig.MinGasPrice,
@@ -136,7 +136,7 @@ func TestTxSender_SendTxs(t *testing.T) {
 			require.Equal(t, expectedCtx, ctx)
 			require.Equal(t, &transaction.FrontendTransaction{
 				Nonce:     uint64(expectedNonce),
-				Value:     "1",
+				Value:     "0",
 				Receiver:  args.SCBridgeAddress,
 				Sender:    args.Wallet.GetBech32(),
 				GasPrice:  expectedNetworkConfig.MinGasPrice,

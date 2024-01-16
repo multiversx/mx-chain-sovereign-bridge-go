@@ -18,10 +18,10 @@ const (
 
 var log = logger.GetOrCreate("client")
 
-// CreateClient creates a grpc client with retrials
+// CreateClient creates a grpc client with retries
 func CreateClient(cfg *config.ClientConfig) (ClientHandler, error) {
 	dialTarget := fmt.Sprintf("%s:%s", cfg.GRPCHost, cfg.GRPCPort)
-	conn, err := connectWithRetrials(dialTarget, cfg.CertificateCfg)
+	conn, err := connectWithRetries(dialTarget, cfg.CertificateCfg)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +30,7 @@ func CreateClient(cfg *config.ClientConfig) (ClientHandler, error) {
 	return NewClient(bridgeClient, conn)
 }
 
-func connectWithRetrials(host string, cfg cert.FileCfg) (GRPCConn, error) {
+func connectWithRetries(host string, cfg cert.FileCfg) (GRPCConn, error) {
 	tlsConfig, err := cert.LoadTLSClientConfig(cfg)
 	if err != nil {
 		return nil, err
@@ -48,6 +48,6 @@ func connectWithRetrials(host string, cfg cert.FileCfg) (GRPCConn, error) {
 		log.Warn("could not establish connection, retrying",
 			"error", errConnection,
 			"host", host,
-			"retrial", i+1)
+			"retries", i+1)
 	}
 }
