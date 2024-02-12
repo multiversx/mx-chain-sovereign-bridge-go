@@ -6,8 +6,8 @@ import (
 
 	"github.com/joho/godotenv"
 	logger "github.com/multiversx/mx-chain-logger-go"
-	"github.com/multiversx/mx-chain-sovereign-bridge-go/bridgeContracts/cmd/config"
-	"github.com/multiversx/mx-chain-sovereign-bridge-go/bridgeContracts/deploy"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/contracts/cmd/config"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/contracts/deploy"
 	"github.com/urfave/cli"
 )
 
@@ -34,7 +34,7 @@ func main() {
 	}
 }
 
-func deployBridgeContracts() error {
+func deployBridgeContracts(ctx *cli.Context) error {
 	_, err := loadConfig()
 	if err != nil {
 		return err
@@ -45,7 +45,7 @@ func deployBridgeContracts() error {
 	return nil
 }
 
-func loadConfig() (*config.BridgeConfig, error) {
+func loadConfig() (*config.ContractsConfig, error) {
 	err := godotenv.Load(".env")
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func loadConfig() (*config.BridgeConfig, error) {
 	log.Info("loaded config", "proxy", proxy)
 	log.Info("loaded config", "maxRetriesWaitNonce", maxRetriesWaitNonce)
 
-	return &config.BridgeConfig{
+	return &config.ContractsConfig{
 		WalletConfig: deploy.WalletConfig{
 			Path:     walletPath,
 			Password: walletPassword,
