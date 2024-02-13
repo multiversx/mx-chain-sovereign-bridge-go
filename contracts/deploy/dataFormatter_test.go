@@ -1,6 +1,7 @@
 package deploy
 
 import (
+	"encoding/hex"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -27,13 +28,12 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 	})
 
 	t.Run("should work", func(t *testing.T) {
-		expectedTxsData := [][]byte{
-			{0x01, 0x02},
-			VmTypeWasmVm,
-			CodeMetadata,
-		}
+		expectedTxData := []byte(
+			hex.EncodeToString([]byte{0x01, 0x02}) + "@" +
+				hex.EncodeToString(VmTypeWasmVm) + "@" +
+				hex.EncodeToString(CodeMetadata))
 
-		txsData := df.CreateTxsData([]byte{0x01, 0x02})
-		require.Equal(t, expectedTxsData, txsData)
+		txData := df.CreateTxsData([]byte{0x01, 0x02})
+		require.Equal(t, expectedTxData, txData)
 	})
 }
