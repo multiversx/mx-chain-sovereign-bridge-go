@@ -2,6 +2,7 @@ package txSender
 
 import (
 	"context"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/common"
 
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
@@ -13,9 +14,9 @@ import (
 // TxSenderArgs holds args to create a new tx sender
 type TxSenderArgs struct {
 	Wallet          core.CryptoComponentsHolder
-	Proxy           Proxy
-	TxInteractor    TxInteractor
-	TxNonceHandler  TxNonceSenderHandler
+	Proxy           common.Proxy
+	TxInteractor    common.TxInteractor
+	TxNonceHandler  common.TxNonceSenderHandler
 	DataFormatter   DataFormatter
 	SCBridgeAddress string
 }
@@ -23,8 +24,8 @@ type TxSenderArgs struct {
 type txSender struct {
 	wallet          core.CryptoComponentsHolder
 	netConfigs      *data.NetworkConfig
-	txInteractor    TxInteractor
-	txNonceHandler  TxNonceSenderHandler
+	txInteractor    common.TxInteractor
+	txNonceHandler  common.TxNonceSenderHandler
 	dataFormatter   DataFormatter
 	scBridgeAddress string
 }
