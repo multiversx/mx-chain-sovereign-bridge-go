@@ -8,6 +8,7 @@ import (
 
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	"github.com/multiversx/mx-chain-core-go/data/transaction"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/common"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/testscommon"
 	"github.com/multiversx/mx-sdk-go/core"
 	"github.com/multiversx/mx-sdk-go/data"
@@ -34,7 +35,7 @@ func TestNewTxSender(t *testing.T) {
 
 		ts, err := NewTxSender(args)
 		require.Nil(t, ts)
-		require.Equal(t, errNilWallet, err)
+		require.Equal(t, common.ErrNilWallet, err)
 	})
 	t.Run("nil proxy", func(t *testing.T) {
 		args := createArgs()
@@ -42,7 +43,7 @@ func TestNewTxSender(t *testing.T) {
 
 		ts, err := NewTxSender(args)
 		require.Nil(t, ts)
-		require.Equal(t, errNilProxy, err)
+		require.Equal(t, common.ErrNilProxy, err)
 	})
 	t.Run("nil tx interactor", func(t *testing.T) {
 		args := createArgs()
@@ -50,7 +51,7 @@ func TestNewTxSender(t *testing.T) {
 
 		ts, err := NewTxSender(args)
 		require.Nil(t, ts)
-		require.Equal(t, errNilTxInteractor, err)
+		require.Equal(t, common.ErrNilTxInteractor, err)
 	})
 	t.Run("nil data formatter", func(t *testing.T) {
 		args := createArgs()
@@ -58,7 +59,7 @@ func TestNewTxSender(t *testing.T) {
 
 		ts, err := NewTxSender(args)
 		require.Nil(t, ts)
-		require.Equal(t, errNilDataFormatter, err)
+		require.Equal(t, common.ErrNilDataFormatter, err)
 	})
 	t.Run("should work", func(t *testing.T) {
 		args := createArgs()
