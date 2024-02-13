@@ -1,5 +1,7 @@
 package deploy
 
+import "encoding/hex"
+
 type dataFormatter struct {
 }
 
@@ -9,17 +11,17 @@ func NewDataFormatter() *dataFormatter {
 }
 
 // CreateTxsData creates txs data for bridge operations
-func (df *dataFormatter) CreateTxsData(bytes []byte) [][]byte {
-	txsData := make([][]byte, 0)
+func (df *dataFormatter) CreateTxsData(bytes []byte) []byte {
 	if len(bytes) == 0 {
-		return txsData
+		return make([]byte, 0)
 	}
 
-	txsData = append(txsData, bytes)
-	txsData = append(txsData, VmTypeWasmVm)
-	txsData = append(txsData, CodeMetadata)
+	txData := []byte(
+		hex.EncodeToString(bytes) + "@" +
+			hex.EncodeToString(VmTypeWasmVm) + "@" +
+			hex.EncodeToString(CodeMetadata))
 
-	return txsData
+	return txData
 }
 
 // IsInterfaceNil checks if the underlying pointer is nil
