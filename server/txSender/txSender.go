@@ -54,19 +54,19 @@ func NewTxSender(args TxSenderArgs) (*txSender, error) {
 
 func checkArgs(args TxSenderArgs) error {
 	if check.IfNil(args.Wallet) {
-		return errNilWallet
+		return common.ErrNilWallet
 	}
 	if check.IfNil(args.Proxy) {
-		return errNilProxy
+		return common.ErrNilProxy
 	}
 	if check.IfNil(args.TxInteractor) {
-		return errNilTxInteractor
+		return common.ErrNilTxInteractor
 	}
 	if check.IfNil(args.DataFormatter) {
-		return errNilDataFormatter
+		return common.ErrNilDataFormatter
 	}
 	if check.IfNil(args.TxNonceHandler) {
-		return errNilNonceHandler
+		return common.ErrNilNonceHandler
 	}
 	if len(args.SCBridgeAddress) == 0 {
 		return errNoSCBridgeAddress
