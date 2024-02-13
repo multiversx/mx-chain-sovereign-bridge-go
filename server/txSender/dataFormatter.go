@@ -2,6 +2,7 @@ package txSender
 
 import (
 	"encoding/hex"
+	logger "github.com/multiversx/mx-chain-logger-go"
 
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 )
@@ -9,6 +10,10 @@ import (
 const (
 	registerBridgeOpsPrefix = "registerBridgeOps"
 	executeBridgeOpPrefix   = "executeBridgeOp"
+)
+
+var (
+	log = logger.GetOrCreate("mx-chain-sovereign-bridge-go")
 )
 
 type dataFormatter struct {

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/common"
 	"net/http"
 	"os"
 	"os/signal"
@@ -160,7 +161,7 @@ func loadConfig() (*config.ServerConfig, error) {
 
 	return &config.ServerConfig{
 		GRPCPort: grpcPort,
-		WalletConfig: txSender.WalletConfig{
+		WalletConfig: common.WalletConfig{
 			Path:     walletPath,
 			Password: walletPassword,
 		},

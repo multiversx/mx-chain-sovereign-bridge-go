@@ -1,9 +1,8 @@
-package txSender
+package common
 
 import (
-	"testing"
-
 	"github.com/stretchr/testify/require"
+	"testing"
 )
 
 func TestLoadWallet(t *testing.T) {
@@ -41,8 +40,6 @@ func TestLoadWallet(t *testing.T) {
 	}
 
 	for _, scenario := range scenarios {
-		log.Info("executing test scenario", "wallet", scenario.cfg.Path)
-
 		wallet, err := LoadWallet(scenario.cfg)
 		if scenario.expectedError == nil {
 			require.Nil(t, err)

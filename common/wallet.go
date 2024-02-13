@@ -1,12 +1,11 @@
-package txSender
+package common
 
 import (
 	"fmt"
 	"strings"
-
+	
 	"github.com/multiversx/mx-chain-crypto-go/signing"
 	"github.com/multiversx/mx-chain-crypto-go/signing/ed25519"
-	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/multiversx/mx-sdk-go/blockchain/cryptoProvider"
 	"github.com/multiversx/mx-sdk-go/core"
 	"github.com/multiversx/mx-sdk-go/interactors"
@@ -15,7 +14,6 @@ import (
 var (
 	suite  = ed25519.NewEd25519()
 	keyGen = signing.NewKeyGenerator(suite)
-	log    = logger.GetOrCreate("mx-chain-sovereign-bridge-go")
 )
 
 const (

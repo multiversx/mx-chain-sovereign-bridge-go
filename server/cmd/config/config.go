@@ -2,6 +2,7 @@ package config
 
 import (
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/cert"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/common"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/txSender"
 )
 
@@ -9,6 +10,6 @@ import (
 type ServerConfig struct {
 	GRPCPort          string
 	TxSenderConfig    txSender.TxSenderConfig
-	WalletConfig      txSender.WalletConfig
+	WalletConfig      common.WalletConfig
 	CertificateConfig cert.FileCfg
 }
