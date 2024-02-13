@@ -1,13 +1,13 @@
 package deploy
 
-// WalletConfig holds wallet config
-type WalletConfig struct {
-	Path     string
-	Password string
-}
-
 // DeployConfig holds deploy config
 type DeployConfig struct {
+	Contracts                  ContractsLocation
 	Proxy                      string
 	MaxRetriesSecondsWaitNonce int
+}
+
+// ContractsLocation holds all contracts path
+type ContractsLocation struct {
+	EsdtSafeContractPath string
 }

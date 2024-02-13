@@ -6,6 +6,8 @@ import (
 
 	"github.com/joho/godotenv"
 	logger "github.com/multiversx/mx-chain-logger-go"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/common"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/contracts"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/contracts/cmd/config"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/contracts/deploy"
 	"github.com/urfave/cli"
@@ -18,6 +20,7 @@ const (
 	envPassword            = "WALLET_PASSWORD"
 	envMultiversXProxy     = "MULTIVERSX_PROXY"
 	envMaxRetriesWaitNonce = "MAX_RETRIES_SECONDS_WAIT_NONCE"
+	esdtSafeContractPath   = "ESDT_SAFE_CONTRACT_PATH"
 )
 
 func main() {
@@ -35,7 +38,12 @@ func main() {
 }
 
 func deployBridgeContracts(ctx *cli.Context) error {
-	_, err := loadConfig()
+	cfg, err := loadConfig()
+	if err != nil {
+		return err
+	}
+
+	err = contracts.DeployBridgeContracts(cfg)
 	if err != nil {
 		return err
 	}
@@ -53,6 +61,7 @@ func loadConfig() (*config.ContractsConfig, error) {
 
 	walletPath := os.Getenv(envWallet)
 	walletPassword := os.Getenv(envPassword)
+	esdtSafeContract := os.Getenv(esdtSafeContractPath)
 	proxy := os.Getenv(envMultiversXProxy)
 	maxRetriesWaitNonceStr := os.Getenv(envMaxRetriesWaitNonce)
 
@@ -65,11 +74,14 @@ func loadConfig() (*config.ContractsConfig, error) {
 	log.Info("loaded config", "maxRetriesWaitNonce", maxRetriesWaitNonce)
 
 	return &config.ContractsConfig{
-		WalletConfig: deploy.WalletConfig{
+		WalletConfig: common.WalletConfig{
 			Path:     walletPath,
 			Password: walletPassword,
 		},
 		DeployConfig: deploy.DeployConfig{
+			Contracts: deploy.ContractsLocation{
+				EsdtSafeContractPath: esdtSafeContract,
+			},
 			Proxy:                      proxy,
 			MaxRetriesSecondsWaitNonce: maxRetriesWaitNonce,
 		},
