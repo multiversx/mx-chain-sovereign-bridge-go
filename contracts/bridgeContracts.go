@@ -1,12 +1,14 @@
 package contracts
 
 import (
+	"context"
+
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/common"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/contracts/cmd/config"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/contracts/deploy"
 )
 
-func DeployBridgeContracts(cfg *config.ContractsConfig) error {
+func DeployBridgeContracts(ctx context.Context, cfg *config.ContractsConfig) error {
 	wallet, err := common.LoadWallet(cfg.WalletConfig)
 	if err != nil {
 		return err
@@ -17,7 +19,7 @@ func DeployBridgeContracts(cfg *config.ContractsConfig) error {
 		return err
 	}
 
-	err = deployer.DeployEsdtSafeContract(cfg.DeployConfig.Contracts.EsdtSafeContractPath)
+	err = deployer.DeployEsdtSafeContract(ctx, cfg.DeployConfig.Contracts.EsdtSafeContractPath)
 	if err != nil {
 		return err
 	}

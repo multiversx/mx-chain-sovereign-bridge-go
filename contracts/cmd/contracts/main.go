@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"os"
 	"strconv"
 
@@ -43,7 +44,7 @@ func deployBridgeContracts(ctx *cli.Context) error {
 		return err
 	}
 
-	err = contracts.DeployBridgeContracts(cfg)
+	err = contracts.DeployBridgeContracts(context.Background(), cfg)
 	if err != nil {
 		return err
 	}

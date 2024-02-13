@@ -3,6 +3,7 @@ package deploy
 import (
 	"context"
 	"github.com/multiversx/mx-chain-core-go/core/check"
+	coreTx "github.com/multiversx/mx-chain-core-go/data/transaction"
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/common"
 	"github.com/multiversx/mx-sdk-go/core"
@@ -77,7 +78,7 @@ func readContractWasm(filePath string) ([]byte, error) {
 	return content, nil
 }
 
-func (d *deployerArgs) DeployEsdtSafeContract(contractLocation string) error {
+func (d *deployerArgs) DeployEsdtSafeContract(ctx context.Context, contractLocation string) error {
 	log.Info("deploying esdt-safe contract")
 
 	binary, err := readContractWasm(contractLocation)
@@ -87,11 +88,54 @@ func (d *deployerArgs) DeployEsdtSafeContract(contractLocation string) error {
 
 	log.Info("esdt-safe contract", "size", len(binary))
 
-	// deploy contract send transaction
+	hash, err := d.sendDeployTx(ctx, binary)
+	if err != nil {
+		return err
+	}
 
-	log.Info("esdt-safe contract deployed successfully")
+	log.Info("esdt-safe contract deployed", "hash", hash)
 
 	return nil
+}
+
+func (d *deployerArgs) sendDeployTx(ctx context.Context, wasmBinary []byte) (string, error) {
+	if len(wasmBinary) == 0 {
+		return "", nil
+	}
+
+	return d.createAndSendTx(ctx, wasmBinary)
+}
+
+func (d *deployerArgs) createAndSendTx(ctx context.Context, wasmBinary []byte) (string, error) {
+	txData := d.dataFormatter.CreateTxsData(wasmBinary)
+
+	tx := &coreTx.FrontendTransaction{
+		Value:    "0",
+		Receiver: "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
+		Sender:   d.wallet.GetBech32(),
+		GasPrice: d.netConfigs.MinGasPrice,
+		GasLimit: 50_000_000,
+		Data:     txData,
+		ChainID:  d.netConfigs.ChainID,
+		Version:  2,
+	}
+
+	err := d.txNonceHandler.ApplyNonceAndGasPrice(ctx, d.wallet.GetAddressHandler(), tx)
+	if err != nil {
+		return "", err
+	}
+
+	err = d.txInteractor.ApplyUserSignature(d.wallet, tx)
+	if err != nil {
+		return "", err
+	}
+
+	hash, err := d.txNonceHandler.SendTransaction(ctx, tx)
+	if err != nil {
+		return "", err
+	}
+
+	return hash, nil
 }
 
 // IsInterfaceNil checks if the underlying pointer is nil

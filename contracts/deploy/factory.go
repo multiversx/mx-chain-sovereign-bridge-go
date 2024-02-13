@@ -1,13 +1,14 @@
 package deploy
 
 import (
+	"time"
+
 	"github.com/multiversx/mx-sdk-go/blockchain"
 	"github.com/multiversx/mx-sdk-go/blockchain/cryptoProvider"
 	"github.com/multiversx/mx-sdk-go/builders"
 	"github.com/multiversx/mx-sdk-go/core"
 	"github.com/multiversx/mx-sdk-go/interactors"
 	"github.com/multiversx/mx-sdk-go/interactors/nonceHandlerV2"
-	"time"
 )
 
 func CreateDeployer(wallet core.CryptoComponentsHolder, cfg DeployConfig) (*deployerArgs, error) {
