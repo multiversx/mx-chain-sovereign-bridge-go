@@ -111,7 +111,7 @@ func (d *deployerArgs) createAndSendTx(ctx context.Context, wasmBinary []byte) (
 
 	tx := &coreTx.FrontendTransaction{
 		Value:    "0",
-		Receiver: "erd1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq6gq4hu",
+		Receiver: SystemScAddress,
 		Sender:   d.wallet.GetBech32(),
 		GasPrice: d.netConfigs.MinGasPrice,
 		GasLimit: 50_000_000,
