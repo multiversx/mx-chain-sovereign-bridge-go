@@ -16,12 +16,13 @@ import (
 
 func createArgs() TxSenderArgs {
 	return TxSenderArgs{
-		Wallet:          &testscommon.CryptoComponentsHolderMock{},
-		Proxy:           &testscommon.ProxyMock{},
-		TxInteractor:    &testscommon.TxInteractorMock{},
-		DataFormatter:   &testscommon.DataFormatterMock{},
-		TxNonceHandler:  &testscommon.TxNonceSenderHandlerMock{},
-		SCBridgeAddress: "erd1qqq",
+		Wallet:            &testscommon.CryptoComponentsHolderMock{},
+		Proxy:             &testscommon.ProxyMock{},
+		TxInteractor:      &testscommon.TxInteractorMock{},
+		DataFormatter:     &testscommon.DataFormatterMock{},
+		TxNonceHandler:    &testscommon.TxNonceSenderHandlerMock{},
+		SCMultisigAddress: "erd1qqq",
+		SCEsdtSafeAddress: "erd1qqqe",
 	}
 }
 
@@ -115,7 +116,7 @@ func TestTxSender_SendTxs(t *testing.T) {
 			require.Equal(t, &transaction.FrontendTransaction{
 				Nonce:    0,
 				Value:    "0",
-				Receiver: args.SCBridgeAddress,
+				Receiver: args.SCEsdtSafeAddress,
 				Sender:   args.Wallet.GetBech32(),
 				GasPrice: expectedNetworkConfig.MinGasPrice,
 				GasLimit: 50_000_000,
@@ -137,7 +138,7 @@ func TestTxSender_SendTxs(t *testing.T) {
 			require.Equal(t, &transaction.FrontendTransaction{
 				Nonce:     uint64(expectedNonce),
 				Value:     "0",
-				Receiver:  args.SCBridgeAddress,
+				Receiver:  args.SCEsdtSafeAddress,
 				Sender:    args.Wallet.GetBech32(),
 				GasPrice:  expectedNetworkConfig.MinGasPrice,
 				GasLimit:  50_000_000,

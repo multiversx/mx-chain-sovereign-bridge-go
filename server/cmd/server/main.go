@@ -39,7 +39,8 @@ const (
 	envGRPCPort            = "GRPC_PORT"
 	envWallet              = "WALLET_PATH"
 	envPassword            = "WALLET_PASSWORD"
-	envBridgeSCAddr        = "BRIDGE_SC_ADDRESS"
+	envMultisigSCAddr      = "MULTISIG_SC_ADDRESS"
+	envEsdtSafeSCAddr      = "ESDT_SAFE_SC_ADDRESS"
 	envMultiversXProxy     = "MULTIVERSX_PROXY"
 	envMaxRetriesWaitNonce = "MAX_RETRIES_SECONDS_WAIT_NONCE"
 	envCertFile            = "CERT_FILE"
@@ -139,7 +140,8 @@ func loadConfig() (*config.ServerConfig, error) {
 	grpcPort := os.Getenv(envGRPCPort)
 	walletPath := os.Getenv(envWallet)
 	walletPassword := os.Getenv(envPassword)
-	bridgeSCAddress := os.Getenv(envBridgeSCAddr)
+	multisigSCAddress := os.Getenv(envMultisigSCAddr)
+	esdtSafeSCAddress := os.Getenv(envEsdtSafeSCAddr)
 	proxy := os.Getenv(envMultiversXProxy)
 	maxRetriesWaitNonceStr := os.Getenv(envMaxRetriesWaitNonce)
 	certFile := os.Getenv(envCertFile)
@@ -151,7 +153,8 @@ func loadConfig() (*config.ServerConfig, error) {
 	}
 
 	log.Info("loaded config", "grpc port", grpcPort)
-	log.Info("loaded config", "bridgeSCAddress", bridgeSCAddress)
+	log.Info("loaded config", "multisigSCAddress", multisigSCAddress)
+	log.Info("loaded config", "esdtSafeSCAddress", esdtSafeSCAddress)
 	log.Info("loaded config", "proxy", proxy)
 	log.Info("loaded config", "maxRetriesWaitNonce", maxRetriesWaitNonce)
 
@@ -165,7 +168,8 @@ func loadConfig() (*config.ServerConfig, error) {
 			Password: walletPassword,
 		},
 		TxSenderConfig: txSender.TxSenderConfig{
-			BridgeSCAddress:            bridgeSCAddress,
+			MultisigSCAddress:          multisigSCAddress,
+			EsdtSafeSCAddress:          esdtSafeSCAddress,
 			Proxy:                      proxy,
 			MaxRetriesSecondsWaitNonce: maxRetriesWaitNonce,
 		},

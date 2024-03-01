@@ -2,6 +2,7 @@ package txSender
 
 import (
 	"context"
+	"strings"
 
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
@@ -12,21 +13,23 @@ import (
 
 // TxSenderArgs holds args to create a new tx sender
 type TxSenderArgs struct {
-	Wallet          core.CryptoComponentsHolder
-	Proxy           Proxy
-	TxInteractor    TxInteractor
-	TxNonceHandler  TxNonceSenderHandler
-	DataFormatter   DataFormatter
-	SCBridgeAddress string
+	Wallet            core.CryptoComponentsHolder
+	Proxy             Proxy
+	TxInteractor      TxInteractor
+	TxNonceHandler    TxNonceSenderHandler
+	DataFormatter     DataFormatter
+	SCMultisigAddress string
+	SCEsdtSafeAddress string
 }
 
 type txSender struct {
-	wallet          core.CryptoComponentsHolder
-	netConfigs      *data.NetworkConfig
-	txInteractor    TxInteractor
-	txNonceHandler  TxNonceSenderHandler
-	dataFormatter   DataFormatter
-	scBridgeAddress string
+	wallet            core.CryptoComponentsHolder
+	netConfigs        *data.NetworkConfig
+	txInteractor      TxInteractor
+	txNonceHandler    TxNonceSenderHandler
+	dataFormatter     DataFormatter
+	scMultisigAddress string
+	scEsdtSafeAddress string
 }
 
 // NewTxSender creates a new tx sender
@@ -42,12 +45,13 @@ func NewTxSender(args TxSenderArgs) (*txSender, error) {
 	}
 
 	return &txSender{
-		wallet:          args.Wallet,
-		netConfigs:      networkConfig,
-		txInteractor:    args.TxInteractor,
-		dataFormatter:   args.DataFormatter,
-		scBridgeAddress: args.SCBridgeAddress,
-		txNonceHandler:  args.TxNonceHandler,
+		wallet:            args.Wallet,
+		netConfigs:        networkConfig,
+		txInteractor:      args.TxInteractor,
+		txNonceHandler:    args.TxNonceHandler,
+		dataFormatter:     args.DataFormatter,
+		scMultisigAddress: args.SCMultisigAddress,
+		scEsdtSafeAddress: args.SCEsdtSafeAddress,
 	}, nil
 }
 
@@ -67,8 +71,11 @@ func checkArgs(args TxSenderArgs) error {
 	if check.IfNil(args.TxNonceHandler) {
 		return errNilNonceHandler
 	}
-	if len(args.SCBridgeAddress) == 0 {
-		return errNoSCBridgeAddress
+	if len(args.SCMultisigAddress) == 0 {
+		return errNoSCMultisigAddress
+	}
+	if len(args.SCEsdtSafeAddress) == 0 {
+		return errNoSCEsdtSafeAddress
 	}
 
 	return nil
@@ -88,15 +95,30 @@ func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.Bridge
 	txsData := ts.dataFormatter.CreateTxsData(data)
 
 	for _, txData := range txsData {
-		tx := &coreTx.FrontendTransaction{
-			Value:    "0",
-			Receiver: ts.scBridgeAddress,
-			Sender:   ts.wallet.GetBech32(),
-			GasPrice: ts.netConfigs.MinGasPrice,
-			GasLimit: 50_000_000, // todo
-			Data:     txData,
-			ChainID:  ts.netConfigs.ChainID,
-			Version:  ts.netConfigs.MinTransactionVersion,
+		var tx *coreTx.FrontendTransaction
+
+		if strings.HasPrefix(string(txData), "register") {
+			tx = &coreTx.FrontendTransaction{
+				Value:    "0",
+				Receiver: ts.scMultisigAddress,
+				Sender:   ts.wallet.GetBech32(),
+				GasPrice: ts.netConfigs.MinGasPrice,
+				GasLimit: 50_000_000, // todo
+				Data:     txData,
+				ChainID:  ts.netConfigs.ChainID,
+				Version:  ts.netConfigs.MinTransactionVersion,
+			}
+		} else {
+			tx = &coreTx.FrontendTransaction{
+				Value:    "0",
+				Receiver: ts.scEsdtSafeAddress,
+				Sender:   ts.wallet.GetBech32(),
+				GasPrice: ts.netConfigs.MinGasPrice,
+				GasLimit: 50_000_000, // todo
+				Data:     txData,
+				ChainID:  ts.netConfigs.ChainID,
+				Version:  ts.netConfigs.MinTransactionVersion,
+			}
 		}
 
 		err := ts.txNonceHandler.ApplyNonceAndGasPrice(ctx, ts.wallet.GetAddressHandler(), tx)

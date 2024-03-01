@@ -2,8 +2,9 @@ package txSender
 
 import (
 	"encoding/hex"
-
+	"fmt"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
+	"strconv"
 )
 
 const (
@@ -36,31 +37,38 @@ func (df *dataFormatter) CreateTxsData(data *sovereign.BridgeOperations) [][]byt
 }
 
 func createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData) []byte {
-	registerBridgeOpTxData := []byte(
-		registerBridgeOpsPrefix + "@" +
-			hex.EncodeToString(bridgeData.LeaderSignature) + "@" +
-			hex.EncodeToString(bridgeData.AggregatedSignature) + "@" +
-			hex.EncodeToString(bridgeData.Hash))
-
-	listOfOps := make([]byte, 0, len(bridgeData.OutGoingOperations))
+	hashOfHashes := bridgeData.Hash
+	hashes := make([]byte, 0)
 	for _, operation := range bridgeData.OutGoingOperations {
-		listOfOps = append(listOfOps, []byte("@")...)
-		listOfOps = append(listOfOps, []byte(hex.EncodeToString(operation.Hash))...)
+		hashes = append(hashes, valueToHexString(len(operation.Hash), 4)...)
+		hashes = append(hashes, operation.Hash...)
 	}
 
-	return append(registerBridgeOpTxData, listOfOps...)
+	return []byte(registerBridgeOpsPrefix + "@" +
+		hex.EncodeToString(hashOfHashes) + "@" +
+		hex.EncodeToString(hashes) + "@" +
+		hex.EncodeToString(bridgeData.LeaderSignature))
 }
 
 func createBridgeOperationsData(outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
 	ret := make([][]byte, 0)
-	for _, operation := range outGoingOperations {
-		currBridgeOp := []byte(executeBridgeOpPrefix + "@" + hex.EncodeToString(operation.Hash) + "@")
-		currBridgeOp = append(currBridgeOp, operation.Data...)
 
-		ret = append(ret, currBridgeOp)
+	currentBridgeOps := []byte(executeBridgeOpPrefix + "@")
+	for _, operation := range outGoingOperations {
+		currentBridgeOps = append(currentBridgeOps, hex.EncodeToString(operation.Data)...)
+
+		ret = append(ret, currentBridgeOps)
 	}
 
 	return ret
+}
+
+func valueToHexString(value int, size int) []byte {
+	hexString := strconv.FormatInt(int64(value), 16)
+	paddedHexString := fmt.Sprintf("%016s", hexString)
+
+	decoded, _ := hex.DecodeString(paddedHexString[(size * 2):])
+	return decoded
 }
 
 // IsInterfaceNil checks if the underlying pointer is nil
