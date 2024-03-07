@@ -2,6 +2,7 @@ package txSender
 
 import (
 	"context"
+	"encoding/hex"
 	"strings"
 
 	"github.com/multiversx/mx-chain-core-go/core/check"
@@ -97,7 +98,9 @@ func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.Bridge
 	for _, txData := range txsData {
 		var tx *coreTx.FrontendTransaction
 
-		if strings.HasPrefix(string(txData), "register") {
+		//switch
+		switch {
+		case strings.HasPrefix(string(txData), "register"):
 			tx = &coreTx.FrontendTransaction{
 				Value:    "0",
 				Receiver: ts.scMultisigAddress,
@@ -108,7 +111,7 @@ func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.Bridge
 				ChainID:  ts.netConfigs.ChainID,
 				Version:  ts.netConfigs.MinTransactionVersion,
 			}
-		} else {
+		case strings.HasPrefix(string(txData), "execute"):
 			tx = &coreTx.FrontendTransaction{
 				Value:    "0",
 				Receiver: ts.scEsdtSafeAddress,
@@ -119,12 +122,16 @@ func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.Bridge
 				ChainID:  ts.netConfigs.ChainID,
 				Version:  ts.netConfigs.MinTransactionVersion,
 			}
+		default:
+			log.Debug("invalid tx data received", "data", hex.EncodeToString(tx.Data))
 		}
 
 		err := ts.txNonceHandler.ApplyNonceAndGasPrice(ctx, ts.wallet.GetAddressHandler(), tx)
 		if err != nil {
 			return nil, err
 		}
+
+		log.Debug("transaction", "nonce", tx.Nonce)
 
 		err = ts.txInteractor.ApplyUserSignature(ts.wallet, tx)
 		if err != nil {
