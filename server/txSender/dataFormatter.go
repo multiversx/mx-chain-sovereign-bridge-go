@@ -52,9 +52,9 @@ func createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData
 
 func createBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) []byte {
 	bridgeOps := []byte(executeBridgeOpsPrefix + "@")
-	bridgeOps = append(bridgeOps, hex.EncodeToString(hashOfHashes)+"@"...)
+	bridgeOps = append(bridgeOps, hex.EncodeToString(hashOfHashes)...)
 	for _, operation := range outGoingOperations {
-		bridgeOps = append(bridgeOps, hex.EncodeToString(operation.Data)...)
+		bridgeOps = append(bridgeOps, "@"+hex.EncodeToString(operation.Data)...)
 	}
 
 	return bridgeOps
