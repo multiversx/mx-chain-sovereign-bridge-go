@@ -9,7 +9,7 @@ import (
 
 const (
 	registerBridgeOpsPrefix = "registerBridgeOps"
-	executeBridgeOpPrefix   = "executeBridgeOps"
+	executeBridgeOpsPrefix  = "executeBridgeOps"
 )
 
 type dataFormatter struct {
@@ -30,7 +30,7 @@ func (df *dataFormatter) CreateTxsData(data *sovereign.BridgeOperations) [][]byt
 	for _, bridgeData := range data.Data {
 		log.Debug("creating tx data", "bridge op hash", bridgeData.Hash)
 		txsData = append(txsData, createRegisterBridgeOperationsData(bridgeData))
-		txsData = append(txsData, createBridgeOperationsData(bridgeData.Hash, bridgeData.OutGoingOperations)...)
+		txsData = append(txsData, createBridgeOperationsData(bridgeData.Hash, bridgeData.OutGoingOperations))
 	}
 
 	return txsData
@@ -50,18 +50,14 @@ func createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData
 		hex.EncodeToString(bridgeData.AggregatedSignature))
 }
 
-func createBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
-	ret := make([][]byte, 0)
-
-	currentBridgeOps := []byte(executeBridgeOpPrefix + "@")
-	currentBridgeOps = append(currentBridgeOps, hex.EncodeToString(hashOfHashes)+"@"...)
+func createBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) []byte {
+	bridgeOps := []byte(executeBridgeOpsPrefix + "@")
+	bridgeOps = append(bridgeOps, hex.EncodeToString(hashOfHashes)+"@"...)
 	for _, operation := range outGoingOperations {
-		currentBridgeOps = append(currentBridgeOps, hex.EncodeToString(operation.Data)...)
-
-		ret = append(ret, currentBridgeOps)
+		bridgeOps = append(bridgeOps, hex.EncodeToString(operation.Data)...)
 	}
 
-	return ret
+	return bridgeOps
 }
 
 func valueToHexString(value int, size int) []byte {
