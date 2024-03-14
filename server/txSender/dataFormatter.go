@@ -1,10 +1,13 @@
 package txSender
 
 import (
+	"bytes"
 	"encoding/hex"
 	"fmt"
-	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	"strconv"
+
+	"github.com/multiversx/mx-chain-core-go/data/sovereign"
+	"github.com/multiversx/mx-chain-core-go/hashing"
 )
 
 const (
@@ -13,6 +16,7 @@ const (
 )
 
 type dataFormatter struct {
+	hasher hashing.Hasher
 }
 
 // NewDataFormatter creates a sovereign bridge tx data formatter
@@ -29,19 +33,30 @@ func (df *dataFormatter) CreateTxsData(data *sovereign.BridgeOperations) [][]byt
 
 	for _, bridgeData := range data.Data {
 		log.Debug("creating tx data", "bridge op hash", bridgeData.Hash)
-		txsData = append(txsData, createRegisterBridgeOperationsData(bridgeData))
+
+		registerBridgeOpData := df.createRegisterBridgeOperationsData(bridgeData)
+		if len(registerBridgeOpData) != 0 {
+			txsData = append(txsData, df.createRegisterBridgeOperationsData(bridgeData))
+		}
+
 		txsData = append(txsData, createBridgeOperationsData(bridgeData.Hash, bridgeData.OutGoingOperations))
 	}
 
 	return txsData
 }
 
-func createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData) []byte {
+func (df *dataFormatter) createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData) []byte {
 	hashOfHashes := bridgeData.Hash
 	hashes := make([]byte, 0)
 	for _, operation := range bridgeData.OutGoingOperations {
 		hashes = append(hashes, valueToHexString(len(operation.Hash), 4)...)
 		hashes = append(hashes, operation.Hash...)
+	}
+
+	// unconfirmed operation, should not register it, only resend it
+	computedHashOfHashes := df.hasher.Compute(string(hashes))
+	if !bytes.Equal(hashOfHashes, computedHashOfHashes) {
+		return nil
 	}
 
 	return []byte(registerBridgeOpsPrefix + "@" +
