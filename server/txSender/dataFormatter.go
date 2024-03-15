@@ -44,20 +44,24 @@ func (df *dataFormatter) CreateTxsData(data *sovereign.BridgeOperations) [][]byt
 }
 
 func (df *dataFormatter) createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData) []byte {
-	args := []byte(registerBridgeOpsPrefix +
-		"@" + hex.EncodeToString(bridgeData.AggregatedSignature) +
-		"@" + hex.EncodeToString(bridgeData.Hash))
+	hashes := make([]byte, 0)
+	hashesHexEncodedArgs := make([]byte, 0)
 	for _, operation := range bridgeData.OutGoingOperations {
-		args = append(args, "@"+hex.EncodeToString(operation.Hash)...)
+		hashesHexEncodedArgs = append(hashesHexEncodedArgs, "@"+hex.EncodeToString(operation.Hash)...)
+		hashes = append(hashes, operation.Hash...)
 	}
 
 	// unconfirmed operation, should not register it, only resend it
 	computedHashOfHashes := df.hasher.Compute(string(hashes))
-	if !bytes.Equal(hashOfHashes, computedHashOfHashes) {
+	if !bytes.Equal(bridgeData.Hash, computedHashOfHashes) {
 		return nil
 	}
 
-	return args
+	registerBridgeOpData := []byte(registerBridgeOpsPrefix +
+		"@" + hex.EncodeToString(bridgeData.AggregatedSignature) +
+		"@" + hex.EncodeToString(bridgeData.Hash))
+
+	return append(registerBridgeOpData, hashesHexEncodedArgs...)
 }
 
 func createBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
