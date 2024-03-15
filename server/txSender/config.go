@@ -12,4 +12,5 @@ type TxSenderConfig struct {
 	EsdtSafeSCAddress          string
 	Proxy                      string
 	MaxRetriesSecondsWaitNonce int
+	Hasher                     string
 }

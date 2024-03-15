@@ -5,27 +5,38 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/multiversx/mx-chain-core-go/core"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/testscommon"
 	"github.com/stretchr/testify/require"
 )
 
 func TestNewDataFormatter(t *testing.T) {
 	t.Parallel()
 
-	df := NewDataFormatter()
-	require.False(t, df.IsInterfaceNil())
+	t.Run("nil hasher, should fail", func(t *testing.T) {
+		df, err := NewDataFormatter(nil)
+		require.Equal(t, core.ErrNilHasher, err)
+		require.Nil(t, df)
+	})
+
+	t.Run("should work", func(t *testing.T) {
+		df, err := NewDataFormatter(&testscommon.HasherMock{})
+		require.Nil(t, err)
+		require.False(t, df.IsInterfaceNil())
+	})
 }
 
 func TestDataFormatter_CreateTxsData(t *testing.T) {
 	t.Parallel()
 
-	df := NewDataFormatter()
-
 	t.Run("nil input, should return empty result", func(t *testing.T) {
+		df, _ := NewDataFormatter(&testscommon.HasherMock{})
 		require.Empty(t, df.CreateTxsData(nil))
 	})
 
 	t.Run("empty data, should return empty result", func(t *testing.T) {
+		df, _ := NewDataFormatter(&testscommon.HasherMock{})
 		require.Empty(t, df.CreateTxsData(&sovereign.BridgeOperations{Data: nil}))
 	})
 
@@ -73,6 +84,29 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 				},
 			},
 		}
+
+		computeHashCt := 0
+		hasher := &testscommon.HasherMock{
+			ComputeCalled: func(s string) []byte {
+				defer func() {
+					computeHashCt++
+				}()
+
+				switch computeHashCt {
+				case 0:
+					require.Equal(t, string(append(opHash1, opHash2...)), s)
+					return bridgeDataHash1
+				case 1:
+					require.Equal(t, string(opHash3), s)
+					return bridgeDataHash2
+				default:
+					require.Fail(t, "should have not compute another hash")
+				}
+
+				return nil
+			},
+		}
+		df, _ := NewDataFormatter(hasher)
 
 		registerOp1 := []byte(
 			registerBridgeOpsPrefix + "@" +

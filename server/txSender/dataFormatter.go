@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/hex"
 
+	"github.com/multiversx/mx-chain-core-go/core"
+	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	"github.com/multiversx/mx-chain-core-go/hashing"
 )
@@ -18,8 +20,14 @@ type dataFormatter struct {
 }
 
 // NewDataFormatter creates a sovereign bridge tx data formatter
-func NewDataFormatter() *dataFormatter {
-	return &dataFormatter{}
+func NewDataFormatter(hasher hashing.Hasher) (*dataFormatter, error) {
+	if check.IfNil(hasher) {
+		return nil, core.ErrNilHasher
+	}
+
+	return &dataFormatter{
+		hasher: hasher,
+	}, nil
 }
 
 // CreateTxsData creates txs data for bridge operations
@@ -34,7 +42,7 @@ func (df *dataFormatter) CreateTxsData(data *sovereign.BridgeOperations) [][]byt
 
 		registerBridgeOpData := df.createRegisterBridgeOperationsData(bridgeData)
 		if len(registerBridgeOpData) != 0 {
-			txsData = append(txsData, df.createRegisterBridgeOperationsData(bridgeData))
+			txsData = append(txsData, registerBridgeOpData)
 		}
 
 		txsData = append(txsData, createBridgeOperationsData(bridgeData.Hash, bridgeData.OutGoingOperations)...)
