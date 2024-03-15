@@ -3,8 +3,6 @@ package txSender
 import (
 	"bytes"
 	"encoding/hex"
-	"fmt"
-	"strconv"
 
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	"github.com/multiversx/mx-chain-core-go/hashing"
@@ -39,18 +37,18 @@ func (df *dataFormatter) CreateTxsData(data *sovereign.BridgeOperations) [][]byt
 			txsData = append(txsData, df.createRegisterBridgeOperationsData(bridgeData))
 		}
 
-		txsData = append(txsData, createBridgeOperationsData(bridgeData.Hash, bridgeData.OutGoingOperations))
+		txsData = append(txsData, createBridgeOperationsData(bridgeData.Hash, bridgeData.OutGoingOperations)...)
 	}
 
 	return txsData
 }
 
 func (df *dataFormatter) createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData) []byte {
-	hashOfHashes := bridgeData.Hash
-	hashes := make([]byte, 0)
+	args := []byte(registerBridgeOpsPrefix +
+		"@" + hex.EncodeToString(bridgeData.AggregatedSignature) +
+		"@" + hex.EncodeToString(bridgeData.Hash))
 	for _, operation := range bridgeData.OutGoingOperations {
-		hashes = append(hashes, valueToHexString(len(operation.Hash), 4)...)
-		hashes = append(hashes, operation.Hash...)
+		args = append(args, "@"+hex.EncodeToString(operation.Hash)...)
 	}
 
 	// unconfirmed operation, should not register it, only resend it
@@ -59,28 +57,19 @@ func (df *dataFormatter) createRegisterBridgeOperationsData(bridgeData *sovereig
 		return nil
 	}
 
-	return []byte(registerBridgeOpsPrefix + "@" +
-		hex.EncodeToString(hashOfHashes) + "@" +
-		hex.EncodeToString(hashes) + "@" +
-		hex.EncodeToString(bridgeData.AggregatedSignature))
+	return args
 }
 
-func createBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) []byte {
-	bridgeOps := []byte(executeBridgeOpsPrefix + "@")
-	bridgeOps = append(bridgeOps, hex.EncodeToString(hashOfHashes)...)
+func createBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
+	ret := make([][]byte, 0)
 	for _, operation := range outGoingOperations {
-		bridgeOps = append(bridgeOps, "@"+hex.EncodeToString(operation.Data)...)
+		currBridgeOp := []byte(executeBridgeOpsPrefix + "@" + hex.EncodeToString(hashOfHashes) + "@")
+		currBridgeOp = append(currBridgeOp, hex.EncodeToString(operation.Data)...)
+
+		ret = append(ret, currBridgeOp)
 	}
 
-	return bridgeOps
-}
-
-func valueToHexString(value int, size int) []byte {
-	hexString := strconv.FormatInt(int64(value), 16)
-	paddedHexString := fmt.Sprintf("%016s", hexString)
-
-	decoded, _ := hex.DecodeString(paddedHexString[(size * 2):])
-	return decoded
+	return ret
 }
 
 // IsInterfaceNil checks if the underlying pointer is nil
