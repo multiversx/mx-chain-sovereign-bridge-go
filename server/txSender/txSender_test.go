@@ -30,6 +30,8 @@ func TestNewTxSender(t *testing.T) {
 	t.Parallel()
 
 	t.Run("nil wallet", func(t *testing.T) {
+		t.Parallel()
+
 		args := createArgs()
 		args.Wallet = nil
 
@@ -38,6 +40,8 @@ func TestNewTxSender(t *testing.T) {
 		require.Equal(t, errNilWallet, err)
 	})
 	t.Run("nil proxy", func(t *testing.T) {
+		t.Parallel()
+
 		args := createArgs()
 		args.Proxy = nil
 
@@ -46,6 +50,8 @@ func TestNewTxSender(t *testing.T) {
 		require.Equal(t, errNilProxy, err)
 	})
 	t.Run("nil tx interactor", func(t *testing.T) {
+		t.Parallel()
+
 		args := createArgs()
 		args.TxInteractor = nil
 
@@ -54,6 +60,8 @@ func TestNewTxSender(t *testing.T) {
 		require.Equal(t, errNilTxInteractor, err)
 	})
 	t.Run("nil data formatter", func(t *testing.T) {
+		t.Parallel()
+
 		args := createArgs()
 		args.DataFormatter = nil
 
@@ -62,6 +70,8 @@ func TestNewTxSender(t *testing.T) {
 		require.Equal(t, errNilDataFormatter, err)
 	})
 	t.Run("should work", func(t *testing.T) {
+		t.Parallel()
+
 		args := createArgs()
 
 		ts, err := NewTxSender(args)
@@ -77,7 +87,7 @@ func TestTxSender_SendTxs(t *testing.T) {
 	expectedNonce := 0
 	expectedDataIdx := 0
 	expectedTxHashes := []string{"txHash1", "txHash2", "txHash3"}
-	expectedTxsData := [][]byte{[]byte("txData1"), []byte("txData2"), []byte("txData3")}
+	expectedTxsData := [][]byte{[]byte(registerBridgeOpsPrefix + "txData1"), []byte(executeBridgeOpsPrefix + "txData2"), []byte(executeBridgeOpsPrefix + "txData3")}
 	expectedSigs := []string{"sig1", "sig2", "sig3"}
 	expectedBridgeData := &sovereign.BridgeOperations{
 		Data: []*sovereign.BridgeOutGoingData{
@@ -116,7 +126,7 @@ func TestTxSender_SendTxs(t *testing.T) {
 			require.Equal(t, &transaction.FrontendTransaction{
 				Nonce:    0,
 				Value:    "0",
-				Receiver: args.SCEsdtSafeAddress,
+				Receiver: tx.Receiver,
 				Sender:   args.Wallet.GetBech32(),
 				GasPrice: expectedNetworkConfig.MinGasPrice,
 				GasLimit: 50_000_000,
@@ -138,7 +148,7 @@ func TestTxSender_SendTxs(t *testing.T) {
 			require.Equal(t, &transaction.FrontendTransaction{
 				Nonce:     uint64(expectedNonce),
 				Value:     "0",
-				Receiver:  args.SCEsdtSafeAddress,
+				Receiver:  tx.Receiver,
 				Sender:    args.Wallet.GetBech32(),
 				GasPrice:  expectedNetworkConfig.MinGasPrice,
 				GasLimit:  50_000_000,
@@ -175,7 +185,7 @@ func TestTxSender_SendTxsConcurrently(t *testing.T) {
 
 	args.DataFormatter = &testscommon.DataFormatterMock{
 		CreateTxsDataCalled: func(data *sovereign.BridgeOperations) [][]byte {
-			return [][]byte{[]byte("txData")}
+			return [][]byte{[]byte(executeBridgeOpsPrefix + "txData")}
 		},
 	}
 	args.TxNonceHandler = &testscommon.TxNonceSenderHandlerMock{
