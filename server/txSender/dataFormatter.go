@@ -35,27 +35,30 @@ func (df *dataFormatter) CreateTxsData(data *sovereign.BridgeOperations) [][]byt
 }
 
 func createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData) []byte {
-	args := []byte(registerBridgeOpsPrefix +
-		"@" + hex.EncodeToString(bridgeData.AggregatedSignature) +
-		"@" + hex.EncodeToString(bridgeData.Hash))
+	registerBridgeOpTxData := []byte(
+		registerBridgeOpsPrefix +
+			"@" + hex.EncodeToString(bridgeData.AggregatedSignature) +
+			"@" + hex.EncodeToString(bridgeData.Hash))
 
 	for _, operation := range bridgeData.OutGoingOperations {
-		args = append(args, "@"+hex.EncodeToString(operation.Hash)...)
+		registerBridgeOpTxData = append(registerBridgeOpTxData, "@"+hex.EncodeToString(operation.Hash)...)
 	}
 
-	return args
+	return registerBridgeOpTxData
 }
 
 func createBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
-	ret := make([][]byte, 0)
+	executeBridgeOpsTxData := make([][]byte, 0)
 	for _, operation := range outGoingOperations {
-		currBridgeOp := []byte(executeBridgeOpsPrefix + "@" + hex.EncodeToString(hashOfHashes) + "@")
-		currBridgeOp = append(currBridgeOp, hex.EncodeToString(operation.Data)...)
+		bridgeOpTxData := []byte(
+			executeBridgeOpsPrefix +
+				"@" + hex.EncodeToString(hashOfHashes) +
+				"@" + hex.EncodeToString(operation.Data))
 
-		ret = append(ret, currBridgeOp)
+		executeBridgeOpsTxData = append(executeBridgeOpsTxData, bridgeOpTxData)
 	}
 
-	return ret
+	return executeBridgeOpsTxData
 }
 
 // IsInterfaceNil checks if the underlying pointer is nil
