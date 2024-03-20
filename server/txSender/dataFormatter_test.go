@@ -39,7 +39,7 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 		require.Empty(t, df.CreateTxsData(&sovereign.BridgeOperations{Data: nil}))
 	})
 
-	t.Run("should work", func(t *testing.T) {
+	t.Run("should work to create register and execute txs data", func(t *testing.T) {
 		bridgeDataHash1 := []byte("bridgeDataHash1")
 		bridgeDataHash2 := []byte("bridgeDataHash2")
 
@@ -53,6 +53,10 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 		opHash2 := []byte("outGoingOpHash2")
 		opHash3 := []byte("outGoingOpHash3")
 
+		bridgeDataOp1 := []byte("bridgeDataOp1")
+		bridgeDataOp2 := []byte("bridgeDataOp2")
+		bridgeDataOp3 := []byte("bridgeDataOp3")
+
 		bridgeOps := &sovereign.BridgeOperations{
 			Data: []*sovereign.BridgeOutGoingData{
 				{
@@ -60,11 +64,11 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 					OutGoingOperations: []*sovereign.OutGoingOperation{
 						{
 							Hash: opHash1,
-							Data: []byte("bridgeOp1"),
+							Data: bridgeDataOp1,
 						},
 						{
 							Hash: opHash2,
-							Data: []byte("bridgeOp2"),
+							Data: bridgeDataOp2,
 						},
 					},
 					AggregatedSignature: aggregatedSig1,
@@ -75,7 +79,7 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 					OutGoingOperations: []*sovereign.OutGoingOperation{
 						{
 							Hash: opHash3,
-							Data: []byte("bridgeOp3"),
+							Data: bridgeDataOp3,
 						},
 					},
 					AggregatedSignature: aggregatedSig2,
@@ -115,10 +119,10 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 				"@" + hex.EncodeToString(opHash2))
 		execOp1 := []byte(executeBridgeOpsPrefix +
 			"@" + hex.EncodeToString(bridgeDataHash1) +
-			"@" + hex.EncodeToString([]byte("bridgeOp1")))
+			"@" + hex.EncodeToString(bridgeDataOp1))
 		execOp2 := []byte(executeBridgeOpsPrefix +
 			"@" + hex.EncodeToString(bridgeDataHash1) +
-			"@" + hex.EncodeToString([]byte("bridgeOp2")))
+			"@" + hex.EncodeToString(bridgeDataOp2))
 
 		registerOp2 := []byte(
 			registerBridgeOpsPrefix +
@@ -127,7 +131,7 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 				"@" + hex.EncodeToString(opHash3))
 		execOp3 := []byte(executeBridgeOpsPrefix +
 			"@" + hex.EncodeToString(bridgeDataHash2) +
-			"@" + hex.EncodeToString([]byte("bridgeOp3")))
+			"@" + hex.EncodeToString(bridgeDataOp3))
 
 		expectedTxsData := [][]byte{
 			registerOp1,
@@ -139,5 +143,74 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 
 		txsData := df.CreateTxsData(bridgeOps)
 		require.Equal(t, expectedTxsData, txsData)
+		require.Equal(t, computeHashCt, 2)
+	})
+
+	t.Run("computed hash != received hash, should only format execute operations, without register", func(t *testing.T) {
+		bridgeDataHash1 := []byte("bridgeDataHash1")
+		aggregatedSig1 := []byte("aggregatedSig1")
+		leaderSig1 := []byte("leaderSig1")
+
+		opHash1 := []byte("outGoingOpHash1")
+		opHash2 := []byte("outGoingOpHash2")
+
+		bridgeDataOp1 := []byte("bridgeDataOp1")
+		bridgeDataOp2 := []byte("bridgeDataOp2")
+
+		bridgeOps := &sovereign.BridgeOperations{
+			Data: []*sovereign.BridgeOutGoingData{
+				{
+					Hash: bridgeDataHash1,
+					OutGoingOperations: []*sovereign.OutGoingOperation{
+						{
+							Hash: opHash1,
+							Data: bridgeDataOp1,
+						},
+						{
+							Hash: opHash2,
+							Data: bridgeDataOp2,
+						},
+					},
+					AggregatedSignature: aggregatedSig1,
+					LeaderSignature:     leaderSig1,
+				},
+			},
+		}
+
+		computeHashCt := 0
+		hasher := &testscommon.HasherMock{
+			ComputeCalled: func(s string) []byte {
+				defer func() {
+					computeHashCt++
+				}()
+
+				switch computeHashCt {
+				case 0:
+					require.Equal(t, string(append(opHash1, opHash2...)), s)
+					return []byte("another hash")
+				default:
+					require.Fail(t, "should have not compute another hash")
+				}
+
+				return nil
+			},
+		}
+		df, _ := NewDataFormatter(hasher)
+
+		execOp1 := []byte(executeBridgeOpsPrefix +
+			"@" + hex.EncodeToString(bridgeDataHash1) +
+			"@" + hex.EncodeToString(bridgeDataOp1))
+		execOp2 := []byte(executeBridgeOpsPrefix +
+			"@" + hex.EncodeToString(bridgeDataHash1) +
+			"@" + hex.EncodeToString(bridgeDataOp2))
+
+		expectedTxsData := [][]byte{
+			execOp1,
+			execOp2,
+		}
+
+		txsData := df.CreateTxsData(bridgeOps)
+		require.Equal(t, expectedTxsData, txsData)
+		require.Equal(t, computeHashCt, 1)
 	})
 }
