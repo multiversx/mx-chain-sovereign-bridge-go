@@ -2,7 +2,6 @@ package txSender
 
 import (
 	"encoding/hex"
-	"fmt"
 	"testing"
 
 	"github.com/multiversx/mx-chain-core-go/core"
@@ -109,30 +108,33 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 		df, _ := NewDataFormatter(hasher)
 
 		registerOp1 := []byte(
-			registerBridgeOpsPrefix + "@" +
-				hex.EncodeToString(bridgeDataHash1) + "@" +
-				fmt.Sprintf("%08x", len(opHash1)) + hex.EncodeToString(opHash1) +
-				fmt.Sprintf("%08x", len(opHash2)) + hex.EncodeToString(opHash2) + "@" +
-				hex.EncodeToString(aggregatedSig1))
-		execOp1 := []byte(executeBridgeOpsPrefix + "@" +
-			hex.EncodeToString(bridgeDataHash1) + "@" +
-			hex.EncodeToString([]byte("bridgeOp1")) +
-			hex.EncodeToString([]byte("bridgeOp2")))
+			registerBridgeOpsPrefix +
+				"@" + hex.EncodeToString(aggregatedSig1) +
+				"@" + hex.EncodeToString(bridgeDataHash1) +
+				"@" + hex.EncodeToString(opHash1) +
+				"@" + hex.EncodeToString(opHash2))
+		execOp1 := []byte(executeBridgeOpsPrefix +
+			"@" + hex.EncodeToString(bridgeDataHash1) +
+			"@" + hex.EncodeToString([]byte("bridgeOp1")))
+		execOp2 := []byte(executeBridgeOpsPrefix +
+			"@" + hex.EncodeToString(bridgeDataHash1) +
+			"@" + hex.EncodeToString([]byte("bridgeOp2")))
 
 		registerOp2 := []byte(
-			registerBridgeOpsPrefix + "@" +
-				hex.EncodeToString(bridgeDataHash2) + "@" +
-				fmt.Sprintf("%08x", len(opHash2)) + hex.EncodeToString(opHash3) + "@" +
-				hex.EncodeToString(aggregatedSig2))
-		execOp2 := []byte(executeBridgeOpsPrefix + "@" +
-			hex.EncodeToString(bridgeDataHash2) + "@" +
-			hex.EncodeToString([]byte("bridgeOp3")))
+			registerBridgeOpsPrefix +
+				"@" + hex.EncodeToString(aggregatedSig2) +
+				"@" + hex.EncodeToString(bridgeDataHash2) +
+				"@" + hex.EncodeToString(opHash3))
+		execOp3 := []byte(executeBridgeOpsPrefix +
+			"@" + hex.EncodeToString(bridgeDataHash2) +
+			"@" + hex.EncodeToString([]byte("bridgeOp3")))
 
 		expectedTxsData := [][]byte{
 			registerOp1,
 			execOp1,
-			registerOp2,
 			execOp2,
+			registerOp2,
+			execOp3,
 		}
 
 		txsData := df.CreateTxsData(bridgeOps)

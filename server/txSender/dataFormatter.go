@@ -73,15 +73,17 @@ func (df *dataFormatter) createRegisterBridgeOperationsData(bridgeData *sovereig
 }
 
 func createBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
-	ret := make([][]byte, 0)
+	executeBridgeOpsTxData := make([][]byte, 0)
 	for _, operation := range outGoingOperations {
-		currBridgeOp := []byte(executeBridgeOpsPrefix + "@" + hex.EncodeToString(hashOfHashes) + "@")
-		currBridgeOp = append(currBridgeOp, hex.EncodeToString(operation.Data)...)
+		bridgeOpTxData := []byte(
+			executeBridgeOpsPrefix +
+				"@" + hex.EncodeToString(hashOfHashes) +
+				"@" + hex.EncodeToString(operation.Data))
 
-		ret = append(ret, currBridgeOp)
+		executeBridgeOpsTxData = append(executeBridgeOpsTxData, bridgeOpTxData)
 	}
 
-	return ret
+	return executeBridgeOpsTxData
 }
 
 // IsInterfaceNil checks if the underlying pointer is nil
