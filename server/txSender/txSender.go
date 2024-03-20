@@ -18,7 +18,7 @@ type TxSenderArgs struct {
 	TxInteractor      TxInteractor
 	TxNonceHandler    TxNonceSenderHandler
 	DataFormatter     DataFormatter
-	SCMultisigAddress string
+	SCMultiSigAddress string
 	SCEsdtSafeAddress string
 }
 
@@ -50,7 +50,7 @@ func NewTxSender(args TxSenderArgs) (*txSender, error) {
 		txInteractor:      args.TxInteractor,
 		txNonceHandler:    args.TxNonceHandler,
 		dataFormatter:     args.DataFormatter,
-		scMultisigAddress: args.SCMultisigAddress,
+		scMultisigAddress: args.SCMultiSigAddress,
 		scEsdtSafeAddress: args.SCEsdtSafeAddress,
 	}, nil
 }
@@ -71,11 +71,11 @@ func checkArgs(args TxSenderArgs) error {
 	if check.IfNil(args.TxNonceHandler) {
 		return errNilNonceHandler
 	}
-	if len(args.SCMultisigAddress) == 0 {
-		return errNoSCMultisigAddress
+	if len(args.SCMultiSigAddress) == 0 {
+		return errNoMultiSigSCAddress
 	}
 	if len(args.SCEsdtSafeAddress) == 0 {
-		return errNoSCEsdtSafeAddress
+		return errNoEsdtSafeSCAddress
 	}
 
 	return nil
@@ -121,12 +121,10 @@ func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.Bridge
 				Version:  ts.netConfigs.MinTransactionVersion,
 			}
 		default:
-			log.Error("invalid tx data received",
-				"data", string(tx.Data))
+			log.Error("invalid tx data received", "data", string(tx.Data))
 		}
 
 		err := ts.txNonceHandler.ApplyNonceAndGasPrice(ctx, ts.wallet.GetAddressHandler(), tx)
-		log.Debug("transaction", "nonce", tx.Nonce)
 		if err != nil {
 			return nil, err
 		}
