@@ -6,12 +6,18 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/testscommon"
+
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	"github.com/multiversx/mx-chain-core-go/data/transaction"
-	"github.com/multiversx/mx-chain-sovereign-bridge-go/testscommon"
 	"github.com/multiversx/mx-sdk-go/core"
 	"github.com/multiversx/mx-sdk-go/data"
 	"github.com/stretchr/testify/require"
+)
+
+const (
+	scMultiSigAddress = "erd1qqq"
+	scEsdtSafeAddress = "erd1qqqe"
 )
 
 func createArgs() TxSenderArgs {
@@ -21,8 +27,8 @@ func createArgs() TxSenderArgs {
 		TxInteractor:      &testscommon.TxInteractorMock{},
 		DataFormatter:     &testscommon.DataFormatterMock{},
 		TxNonceHandler:    &testscommon.TxNonceSenderHandlerMock{},
-		SCMultisigAddress: "erd1qqq",
-		SCEsdtSafeAddress: "erd1qqqe",
+		SCMultiSigAddress: scMultiSigAddress,
+		SCEsdtSafeAddress: scEsdtSafeAddress,
 	}
 }
 
@@ -30,8 +36,6 @@ func TestNewTxSender(t *testing.T) {
 	t.Parallel()
 
 	t.Run("nil wallet", func(t *testing.T) {
-		t.Parallel()
-
 		args := createArgs()
 		args.Wallet = nil
 
@@ -40,8 +44,6 @@ func TestNewTxSender(t *testing.T) {
 		require.Equal(t, errNilWallet, err)
 	})
 	t.Run("nil proxy", func(t *testing.T) {
-		t.Parallel()
-
 		args := createArgs()
 		args.Proxy = nil
 
@@ -50,8 +52,6 @@ func TestNewTxSender(t *testing.T) {
 		require.Equal(t, errNilProxy, err)
 	})
 	t.Run("nil tx interactor", func(t *testing.T) {
-		t.Parallel()
-
 		args := createArgs()
 		args.TxInteractor = nil
 
@@ -60,8 +60,6 @@ func TestNewTxSender(t *testing.T) {
 		require.Equal(t, errNilTxInteractor, err)
 	})
 	t.Run("nil data formatter", func(t *testing.T) {
-		t.Parallel()
-
 		args := createArgs()
 		args.DataFormatter = nil
 
@@ -70,8 +68,6 @@ func TestNewTxSender(t *testing.T) {
 		require.Equal(t, errNilDataFormatter, err)
 	})
 	t.Run("should work", func(t *testing.T) {
-		t.Parallel()
-
 		args := createArgs()
 
 		ts, err := NewTxSender(args)
@@ -87,7 +83,16 @@ func TestTxSender_SendTxs(t *testing.T) {
 	expectedNonce := 0
 	expectedDataIdx := 0
 	expectedTxHashes := []string{"txHash1", "txHash2", "txHash3"}
-	expectedTxsData := [][]byte{[]byte(registerBridgeOpsPrefix + "txData1"), []byte(executeBridgeOpsPrefix + "txData2"), []byte(executeBridgeOpsPrefix + "txData3")}
+	expectedTxsData := [][]byte{
+		[]byte(registerBridgeOpsPrefix + "txData1"),
+		[]byte(executeBridgeOpsPrefix + "txData2"),
+		[]byte(executeBridgeOpsPrefix + "txData3"),
+	}
+	expectedTxsReceiver := []string{
+		scMultiSigAddress,
+		scEsdtSafeAddress,
+		scEsdtSafeAddress,
+	}
 	expectedSigs := []string{"sig1", "sig2", "sig3"}
 	expectedBridgeData := &sovereign.BridgeOperations{
 		Data: []*sovereign.BridgeOutGoingData{
@@ -126,7 +131,7 @@ func TestTxSender_SendTxs(t *testing.T) {
 			require.Equal(t, &transaction.FrontendTransaction{
 				Nonce:    0,
 				Value:    "0",
-				Receiver: tx.Receiver,
+				Receiver: expectedTxsReceiver[expectedDataIdx],
 				Sender:   args.Wallet.GetBech32(),
 				GasPrice: expectedNetworkConfig.MinGasPrice,
 				GasLimit: 50_000_000,
@@ -148,7 +153,7 @@ func TestTxSender_SendTxs(t *testing.T) {
 			require.Equal(t, &transaction.FrontendTransaction{
 				Nonce:     uint64(expectedNonce),
 				Value:     "0",
-				Receiver:  tx.Receiver,
+				Receiver:  expectedTxsReceiver[expectedDataIdx],
 				Sender:    args.Wallet.GetBech32(),
 				GasPrice:  expectedNetworkConfig.MinGasPrice,
 				GasLimit:  50_000_000,

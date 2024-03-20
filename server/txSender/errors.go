@@ -14,6 +14,6 @@ var errNilDataFormatter = errors.New("nil data formatter provided")
 
 var errNilNonceHandler = errors.New("nil nonce handler provided")
 
-var errNoSCMultisigAddress = errors.New("no sc multisig address provided")
+var errNoMultiSigSCAddress = errors.New("no multi sig sc address provided")
 
-var errNoSCEsdtSafeAddress = errors.New("no sc esdt safe address provided")
+var errNoEsdtSafeSCAddress = errors.New("no esdt safe sc address provided")

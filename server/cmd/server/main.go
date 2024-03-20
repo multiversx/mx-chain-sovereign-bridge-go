@@ -9,6 +9,11 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/cert"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/server"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/cmd/config"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/txSender"
+
 	"github.com/joho/godotenv"
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-core-go/core/closing"
@@ -16,10 +21,6 @@ import (
 	"github.com/multiversx/mx-chain-core-go/marshal"
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/multiversx/mx-chain-logger-go/file"
-	"github.com/multiversx/mx-chain-sovereign-bridge-go/cert"
-	"github.com/multiversx/mx-chain-sovereign-bridge-go/server"
-	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/cmd/config"
-	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/txSender"
 	"github.com/urfave/cli"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -39,7 +40,7 @@ const (
 	envGRPCPort            = "GRPC_PORT"
 	envWallet              = "WALLET_PATH"
 	envPassword            = "WALLET_PASSWORD"
-	envMultisigSCAddr      = "MULTISIG_SC_ADDRESS"
+	envMultiSigSCAddr      = "MULTI_SIG_SC_ADDRESS"
 	envEsdtSafeSCAddr      = "ESDT_SAFE_SC_ADDRESS"
 	envMultiversXProxy     = "MULTIVERSX_PROXY"
 	envMaxRetriesWaitNonce = "MAX_RETRIES_SECONDS_WAIT_NONCE"
@@ -140,7 +141,7 @@ func loadConfig() (*config.ServerConfig, error) {
 	grpcPort := os.Getenv(envGRPCPort)
 	walletPath := os.Getenv(envWallet)
 	walletPassword := os.Getenv(envPassword)
-	multisigSCAddress := os.Getenv(envMultisigSCAddr)
+	multiSigSCAddress := os.Getenv(envMultiSigSCAddr)
 	esdtSafeSCAddress := os.Getenv(envEsdtSafeSCAddr)
 	proxy := os.Getenv(envMultiversXProxy)
 	maxRetriesWaitNonceStr := os.Getenv(envMaxRetriesWaitNonce)
@@ -153,7 +154,7 @@ func loadConfig() (*config.ServerConfig, error) {
 	}
 
 	log.Info("loaded config", "grpc port", grpcPort)
-	log.Info("loaded config", "multisigSCAddress", multisigSCAddress)
+	log.Info("loaded config", "multiSigSCAddress", multiSigSCAddress)
 	log.Info("loaded config", "esdtSafeSCAddress", esdtSafeSCAddress)
 	log.Info("loaded config", "proxy", proxy)
 	log.Info("loaded config", "maxRetriesWaitNonce", maxRetriesWaitNonce)
@@ -168,7 +169,7 @@ func loadConfig() (*config.ServerConfig, error) {
 			Password: walletPassword,
 		},
 		TxSenderConfig: txSender.TxSenderConfig{
-			MultisigSCAddress:          multisigSCAddress,
+			MultisigSCAddress:          multiSigSCAddress,
 			EsdtSafeSCAddress:          esdtSafeSCAddress,
 			Proxy:                      proxy,
 			MaxRetriesSecondsWaitNonce: maxRetriesWaitNonce,

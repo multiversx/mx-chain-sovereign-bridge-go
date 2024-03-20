@@ -2,6 +2,7 @@ package txSender
 
 import (
 	"encoding/hex"
+
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 )
 
