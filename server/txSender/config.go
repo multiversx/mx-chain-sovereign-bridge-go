@@ -8,7 +8,8 @@ type WalletConfig struct {
 
 // TxSenderConfig holds tx sender config
 type TxSenderConfig struct {
-	BridgeSCAddress            string
+	MultisigSCAddress          string
+	EsdtSafeSCAddress          string
 	Proxy                      string
 	MaxRetriesSecondsWaitNonce int
 }

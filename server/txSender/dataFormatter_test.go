@@ -53,7 +53,7 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 						},
 						{
 							Hash: opHash2,
-							Data: []byte("bridgeOp2@bridgeOp22"),
+							Data: []byte("bridgeOp2"),
 						},
 					},
 					AggregatedSignature: aggregatedSig1,
@@ -74,28 +74,26 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 		}
 
 		registerOp1 := []byte(
-			registerBridgeOpsPrefix + "@" +
-				hex.EncodeToString(leaderSig1) + "@" +
-				hex.EncodeToString(aggregatedSig1) + "@" +
-				hex.EncodeToString(bridgeDataHash1) + "@" +
-				hex.EncodeToString(opHash1) + "@" +
-				hex.EncodeToString(opHash2))
-		execOp1 := []byte(executeBridgeOpPrefix + "@" +
-			hex.EncodeToString(opHash1) + "@" +
-			"bridgeOp1")
-		execOp2 := []byte(executeBridgeOpPrefix + "@" +
-			hex.EncodeToString(opHash2) + "@" +
-			"bridgeOp2@bridgeOp22")
+			registerBridgeOpsPrefix +
+				"@" + hex.EncodeToString(aggregatedSig1) +
+				"@" + hex.EncodeToString(bridgeDataHash1) +
+				"@" + hex.EncodeToString(opHash1) +
+				"@" + hex.EncodeToString(opHash2))
+		execOp1 := []byte(executeBridgeOpsPrefix +
+			"@" + hex.EncodeToString(bridgeDataHash1) +
+			"@" + hex.EncodeToString([]byte("bridgeOp1")))
+		execOp2 := []byte(executeBridgeOpsPrefix +
+			"@" + hex.EncodeToString(bridgeDataHash1) +
+			"@" + hex.EncodeToString([]byte("bridgeOp2")))
 
 		registerOp2 := []byte(
-			registerBridgeOpsPrefix + "@" +
-				hex.EncodeToString(leaderSig2) + "@" +
-				hex.EncodeToString(aggregatedSig2) + "@" +
-				hex.EncodeToString(bridgeDataHash2) + "@" +
-				hex.EncodeToString(opHash3))
-		execOp3 := []byte(executeBridgeOpPrefix + "@" +
-			hex.EncodeToString(opHash3) + "@" +
-			"bridgeOp3")
+			registerBridgeOpsPrefix +
+				"@" + hex.EncodeToString(aggregatedSig2) +
+				"@" + hex.EncodeToString(bridgeDataHash2) +
+				"@" + hex.EncodeToString(opHash3))
+		execOp3 := []byte(executeBridgeOpsPrefix +
+			"@" + hex.EncodeToString(bridgeDataHash2) +
+			"@" + hex.EncodeToString([]byte("bridgeOp3")))
 
 		expectedTxsData := [][]byte{
 			registerOp1,

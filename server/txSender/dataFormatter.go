@@ -8,7 +8,7 @@ import (
 
 const (
 	registerBridgeOpsPrefix = "registerBridgeOps"
-	executeBridgeOpPrefix   = "executeBridgeOp"
+	executeBridgeOpsPrefix  = "executeBridgeOps"
 )
 
 type dataFormatter struct {
@@ -29,7 +29,7 @@ func (df *dataFormatter) CreateTxsData(data *sovereign.BridgeOperations) [][]byt
 	for _, bridgeData := range data.Data {
 		log.Debug("creating tx data", "bridge op hash", bridgeData.Hash)
 		txsData = append(txsData, createRegisterBridgeOperationsData(bridgeData))
-		txsData = append(txsData, createBridgeOperationsData(bridgeData.OutGoingOperations)...)
+		txsData = append(txsData, createBridgeOperationsData(bridgeData.Hash, bridgeData.OutGoingOperations)...)
 	}
 
 	return txsData
@@ -37,30 +37,29 @@ func (df *dataFormatter) CreateTxsData(data *sovereign.BridgeOperations) [][]byt
 
 func createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData) []byte {
 	registerBridgeOpTxData := []byte(
-		registerBridgeOpsPrefix + "@" +
-			hex.EncodeToString(bridgeData.LeaderSignature) + "@" +
-			hex.EncodeToString(bridgeData.AggregatedSignature) + "@" +
-			hex.EncodeToString(bridgeData.Hash))
+		registerBridgeOpsPrefix +
+			"@" + hex.EncodeToString(bridgeData.AggregatedSignature) +
+			"@" + hex.EncodeToString(bridgeData.Hash))
 
-	listOfOps := make([]byte, 0, len(bridgeData.OutGoingOperations))
 	for _, operation := range bridgeData.OutGoingOperations {
-		listOfOps = append(listOfOps, []byte("@")...)
-		listOfOps = append(listOfOps, []byte(hex.EncodeToString(operation.Hash))...)
+		registerBridgeOpTxData = append(registerBridgeOpTxData, "@"+hex.EncodeToString(operation.Hash)...)
 	}
 
-	return append(registerBridgeOpTxData, listOfOps...)
+	return registerBridgeOpTxData
 }
 
-func createBridgeOperationsData(outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
-	ret := make([][]byte, 0)
+func createBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
+	executeBridgeOpsTxData := make([][]byte, 0)
 	for _, operation := range outGoingOperations {
-		currBridgeOp := []byte(executeBridgeOpPrefix + "@" + hex.EncodeToString(operation.Hash) + "@")
-		currBridgeOp = append(currBridgeOp, operation.Data...)
+		bridgeOpTxData := []byte(
+			executeBridgeOpsPrefix +
+				"@" + hex.EncodeToString(hashOfHashes) +
+				"@" + hex.EncodeToString(operation.Data))
 
-		ret = append(ret, currBridgeOp)
+		executeBridgeOpsTxData = append(executeBridgeOpsTxData, bridgeOpTxData)
 	}
 
-	return ret
+	return executeBridgeOpsTxData
 }
 
 // IsInterfaceNil checks if the underlying pointer is nil

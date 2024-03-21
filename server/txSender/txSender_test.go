@@ -6,22 +6,29 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/testscommon"
+
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	"github.com/multiversx/mx-chain-core-go/data/transaction"
-	"github.com/multiversx/mx-chain-sovereign-bridge-go/testscommon"
 	"github.com/multiversx/mx-sdk-go/core"
 	"github.com/multiversx/mx-sdk-go/data"
 	"github.com/stretchr/testify/require"
 )
 
+const (
+	scMultiSigAddress = "erd1qqq"
+	scEsdtSafeAddress = "erd1qqqe"
+)
+
 func createArgs() TxSenderArgs {
 	return TxSenderArgs{
-		Wallet:          &testscommon.CryptoComponentsHolderMock{},
-		Proxy:           &testscommon.ProxyMock{},
-		TxInteractor:    &testscommon.TxInteractorMock{},
-		DataFormatter:   &testscommon.DataFormatterMock{},
-		TxNonceHandler:  &testscommon.TxNonceSenderHandlerMock{},
-		SCBridgeAddress: "erd1qqq",
+		Wallet:            &testscommon.CryptoComponentsHolderMock{},
+		Proxy:             &testscommon.ProxyMock{},
+		TxInteractor:      &testscommon.TxInteractorMock{},
+		DataFormatter:     &testscommon.DataFormatterMock{},
+		TxNonceHandler:    &testscommon.TxNonceSenderHandlerMock{},
+		SCMultiSigAddress: scMultiSigAddress,
+		SCEsdtSafeAddress: scEsdtSafeAddress,
 	}
 }
 
@@ -76,7 +83,16 @@ func TestTxSender_SendTxs(t *testing.T) {
 	expectedNonce := 0
 	expectedDataIdx := 0
 	expectedTxHashes := []string{"txHash1", "txHash2", "txHash3"}
-	expectedTxsData := [][]byte{[]byte("txData1"), []byte("txData2"), []byte("txData3")}
+	expectedTxsData := [][]byte{
+		[]byte(registerBridgeOpsPrefix + "txData1"),
+		[]byte(executeBridgeOpsPrefix + "txData2"),
+		[]byte(executeBridgeOpsPrefix + "txData3"),
+	}
+	expectedTxsReceiver := []string{
+		scMultiSigAddress,
+		scEsdtSafeAddress,
+		scEsdtSafeAddress,
+	}
 	expectedSigs := []string{"sig1", "sig2", "sig3"}
 	expectedBridgeData := &sovereign.BridgeOperations{
 		Data: []*sovereign.BridgeOutGoingData{
@@ -115,7 +131,7 @@ func TestTxSender_SendTxs(t *testing.T) {
 			require.Equal(t, &transaction.FrontendTransaction{
 				Nonce:    0,
 				Value:    "0",
-				Receiver: args.SCBridgeAddress,
+				Receiver: expectedTxsReceiver[expectedDataIdx],
 				Sender:   args.Wallet.GetBech32(),
 				GasPrice: expectedNetworkConfig.MinGasPrice,
 				GasLimit: 50_000_000,
@@ -137,7 +153,7 @@ func TestTxSender_SendTxs(t *testing.T) {
 			require.Equal(t, &transaction.FrontendTransaction{
 				Nonce:     uint64(expectedNonce),
 				Value:     "0",
-				Receiver:  args.SCBridgeAddress,
+				Receiver:  expectedTxsReceiver[expectedDataIdx],
 				Sender:    args.Wallet.GetBech32(),
 				GasPrice:  expectedNetworkConfig.MinGasPrice,
 				GasLimit:  50_000_000,
@@ -174,7 +190,7 @@ func TestTxSender_SendTxsConcurrently(t *testing.T) {
 
 	args.DataFormatter = &testscommon.DataFormatterMock{
 		CreateTxsDataCalled: func(data *sovereign.BridgeOperations) [][]byte {
-			return [][]byte{[]byte("txData")}
+			return [][]byte{[]byte(executeBridgeOpsPrefix + "txData")}
 		},
 	}
 	args.TxNonceHandler = &testscommon.TxNonceSenderHandlerMock{
