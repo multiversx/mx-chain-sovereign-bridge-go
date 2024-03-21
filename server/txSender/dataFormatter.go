@@ -1,9 +1,13 @@
 package txSender
 
 import (
+	"bytes"
 	"encoding/hex"
 
+	"github.com/multiversx/mx-chain-core-go/core"
+	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
+	"github.com/multiversx/mx-chain-core-go/hashing"
 )
 
 const (
@@ -12,11 +16,18 @@ const (
 )
 
 type dataFormatter struct {
+	hasher hashing.Hasher
 }
 
 // NewDataFormatter creates a sovereign bridge tx data formatter
-func NewDataFormatter() *dataFormatter {
-	return &dataFormatter{}
+func NewDataFormatter(hasher hashing.Hasher) (*dataFormatter, error) {
+	if check.IfNil(hasher) {
+		return nil, core.ErrNilHasher
+	}
+
+	return &dataFormatter{
+		hasher: hasher,
+	}, nil
 }
 
 // CreateTxsData creates txs data for bridge operations
@@ -28,24 +39,37 @@ func (df *dataFormatter) CreateTxsData(data *sovereign.BridgeOperations) [][]byt
 
 	for _, bridgeData := range data.Data {
 		log.Debug("creating tx data", "bridge op hash", bridgeData.Hash)
-		txsData = append(txsData, createRegisterBridgeOperationsData(bridgeData))
+
+		registerBridgeOpData := df.createRegisterBridgeOperationsData(bridgeData)
+		if len(registerBridgeOpData) != 0 {
+			txsData = append(txsData, registerBridgeOpData)
+		}
+
 		txsData = append(txsData, createBridgeOperationsData(bridgeData.Hash, bridgeData.OutGoingOperations)...)
 	}
 
 	return txsData
 }
 
-func createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData) []byte {
-	registerBridgeOpTxData := []byte(
-		registerBridgeOpsPrefix +
-			"@" + hex.EncodeToString(bridgeData.AggregatedSignature) +
-			"@" + hex.EncodeToString(bridgeData.Hash))
-
+func (df *dataFormatter) createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData) []byte {
+	hashes := make([]byte, 0)
+	hashesHexEncodedArgs := make([]byte, 0)
 	for _, operation := range bridgeData.OutGoingOperations {
-		registerBridgeOpTxData = append(registerBridgeOpTxData, "@"+hex.EncodeToString(operation.Hash)...)
+		hashesHexEncodedArgs = append(hashesHexEncodedArgs, "@"+hex.EncodeToString(operation.Hash)...)
+		hashes = append(hashes, operation.Hash...)
 	}
 
-	return registerBridgeOpTxData
+	// unconfirmed operation, should not register it, only resend it
+	computedHashOfHashes := df.hasher.Compute(string(hashes))
+	if !bytes.Equal(bridgeData.Hash, computedHashOfHashes) {
+		return nil
+	}
+
+	registerBridgeOpData := []byte(registerBridgeOpsPrefix +
+		"@" + hex.EncodeToString(bridgeData.AggregatedSignature) +
+		"@" + hex.EncodeToString(bridgeData.Hash))
+
+	return append(registerBridgeOpData, hashesHexEncodedArgs...)
 }
 
 func createBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) [][]byte {

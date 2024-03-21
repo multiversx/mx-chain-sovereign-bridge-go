@@ -46,6 +46,7 @@ const (
 	envMaxRetriesWaitNonce = "MAX_RETRIES_SECONDS_WAIT_NONCE"
 	envCertFile            = "CERT_FILE"
 	envCertPkFile          = "CERT_PK_FILE"
+	envHasher              = "HASHER"
 )
 
 func main() {
@@ -147,6 +148,7 @@ func loadConfig() (*config.ServerConfig, error) {
 	maxRetriesWaitNonceStr := os.Getenv(envMaxRetriesWaitNonce)
 	certFile := os.Getenv(envCertFile)
 	certPkFile := os.Getenv(envCertPkFile)
+	hasher := os.Getenv(envHasher)
 
 	maxRetriesWaitNonce, err := strconv.Atoi(maxRetriesWaitNonceStr)
 	if err != nil {
@@ -158,6 +160,7 @@ func loadConfig() (*config.ServerConfig, error) {
 	log.Info("loaded config", "esdtSafeSCAddress", esdtSafeSCAddress)
 	log.Info("loaded config", "proxy", proxy)
 	log.Info("loaded config", "maxRetriesWaitNonce", maxRetriesWaitNonce)
+	log.Info("loaded config", "hasher", hasher)
 
 	log.Info("loaded config", "certificate file", certFile)
 	log.Info("loaded config", "certificate pk", certPkFile)
@@ -173,6 +176,7 @@ func loadConfig() (*config.ServerConfig, error) {
 			EsdtSafeSCAddress:          esdtSafeSCAddress,
 			Proxy:                      proxy,
 			MaxRetriesSecondsWaitNonce: maxRetriesWaitNonce,
+			Hasher:                     hasher,
 		},
 		CertificateConfig: cert.FileCfg{
 			CertFile: certFile,

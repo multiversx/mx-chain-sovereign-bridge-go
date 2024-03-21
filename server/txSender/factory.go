@@ -3,6 +3,7 @@ package txSender
 import (
 	"time"
 
+	"github.com/multiversx/mx-chain-core-go/hashing/factory"
 	"github.com/multiversx/mx-sdk-go/blockchain"
 	"github.com/multiversx/mx-sdk-go/blockchain/cryptoProvider"
 	"github.com/multiversx/mx-sdk-go/builders"
@@ -45,12 +46,22 @@ func CreateTxSender(wallet core.CryptoComponentsHolder, cfg TxSenderConfig) (*tx
 		return nil, err
 	}
 
+	hasher, err := factory.NewHasher(cfg.Hasher)
+	if err != nil {
+		return nil, err
+	}
+
+	dtaFormatter, err := NewDataFormatter(hasher)
+	if err != nil {
+		return nil, err
+	}
+
 	return NewTxSender(TxSenderArgs{
 		Wallet:            wallet,
 		Proxy:             proxy,
 		TxInteractor:      ti,
 		TxNonceHandler:    nonceHandler,
-		DataFormatter:     NewDataFormatter(),
+		DataFormatter:     dtaFormatter,
 		SCMultiSigAddress: cfg.MultisigSCAddress,
 		SCEsdtSafeAddress: cfg.EsdtSafeSCAddress,
 	})
