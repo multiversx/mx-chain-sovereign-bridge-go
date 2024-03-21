@@ -121,7 +121,7 @@ func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.Bridge
 				Version:  ts.netConfigs.MinTransactionVersion,
 			}
 		default:
-			log.Error("invalid tx data received", "data", string(tx.Data))
+			log.Error("invalid tx data received", "data", string(txData))
 		}
 
 		err := ts.txNonceHandler.ApplyNonceAndGasPrice(ctx, ts.wallet.GetAddressHandler(), tx)
