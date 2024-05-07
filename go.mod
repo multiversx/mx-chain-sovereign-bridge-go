@@ -8,9 +8,9 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/multiversx/mx-chain-core-go v1.2.20-0.20240507090904-fb3dbed69fd0
 	github.com/multiversx/mx-chain-crypto-go v1.2.10-0.20231206065052-38843c1f1479
-	github.com/multiversx/mx-chain-go v1.7.3-0.20240228112221-69530308bb19
+	github.com/multiversx/mx-chain-go v1.7.7-0.20240507150218-0fc71ad08f53
 	github.com/multiversx/mx-chain-logger-go v1.0.14-0.20240129144507-d00e967c890c
-	github.com/multiversx/mx-sdk-go v1.3.12-0.20240507142919-65c473ec324e
+	github.com/multiversx/mx-sdk-go v1.3.12-0.20240507150713-60afe65390f1
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli v1.22.14
 	google.golang.org/grpc v1.60.1
@@ -42,7 +42,8 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
-	github.com/multiversx/mx-chain-communication-go v1.0.13-0.20240126121117-627adccf10ad // indirect
+	github.com/multiversx/concurrent-map v0.1.4 // indirect
+	github.com/multiversx/mx-chain-communication-go v1.0.13-0.20240321151517-2fffad77c605 // indirect
 	github.com/multiversx/mx-chain-storage-go v1.0.15-0.20240507133659-ea37d8e8e129 // indirect
 	github.com/multiversx/mx-chain-vm-common-go v1.5.12-0.20240507093748-8b13467a0f2d // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
