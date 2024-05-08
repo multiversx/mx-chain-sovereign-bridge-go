@@ -7,10 +7,10 @@ require (
 	github.com/gorilla/websocket v1.5.0
 	github.com/joho/godotenv v1.5.1
 	github.com/multiversx/mx-chain-core-go v1.2.20-0.20240507090904-fb3dbed69fd0
-	github.com/multiversx/mx-chain-crypto-go v1.2.10-0.20231206065052-38843c1f1479
+	github.com/multiversx/mx-chain-crypto-go v1.2.12-0.20240508065100-8a7f82bfdcd4
 	github.com/multiversx/mx-chain-go v1.7.7-0.20240507150218-0fc71ad08f53
-	github.com/multiversx/mx-chain-logger-go v1.0.14-0.20240129144507-d00e967c890c
-	github.com/multiversx/mx-sdk-go v1.3.12-0.20240507150713-60afe65390f1
+	github.com/multiversx/mx-chain-logger-go v1.0.15-0.20240508062638-b5e409988931
+	github.com/multiversx/mx-sdk-go v1.3.12-0.20240508065329-11ca0fa8346e
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli v1.22.14
 	google.golang.org/grpc v1.60.1
