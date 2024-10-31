@@ -9,7 +9,7 @@ import (
 	"github.com/multiversx/mx-sdk-go/builders"
 	"github.com/multiversx/mx-sdk-go/core"
 	"github.com/multiversx/mx-sdk-go/interactors"
-	"github.com/multiversx/mx-sdk-go/interactors/nonceHandlerV2"
+	"github.com/multiversx/mx-sdk-go/interactors/nonceHandlerV3"
 )
 
 // CreateTxSender creates a new transactions sender
@@ -28,9 +28,9 @@ func CreateTxSender(wallet core.CryptoComponentsHolder, cfg TxSenderConfig) (*tx
 		return nil, err
 	}
 
-	nonceHandler, err := nonceHandlerV2.NewNonceTransactionHandlerV2(nonceHandlerV2.ArgsNonceTransactionsHandlerV2{
-		Proxy:            proxy,
-		IntervalToResend: time.Second * time.Duration(cfg.MaxRetriesSecondsWaitNonce),
+	nonceHandler, err := nonceHandlerV3.NewNonceTransactionHandlerV3(nonceHandlerV3.ArgsNonceTransactionsHandlerV3{
+		Proxy:          proxy,
+		IntervalToSend: time.Second * time.Duration(cfg.MaxRetriesSecondsWaitNonce),
 	})
 	if err != nil {
 		return nil, err

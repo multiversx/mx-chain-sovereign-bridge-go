@@ -30,7 +30,7 @@ type DataFormatter interface {
 
 // TxNonceSenderHandler should handle nonce management and tx interactions
 type TxNonceSenderHandler interface {
-	ApplyNonceAndGasPrice(ctx context.Context, address core.AddressHandler, tx *transaction.FrontendTransaction) error
-	SendTransaction(ctx context.Context, tx *transaction.FrontendTransaction) (string, error)
+	ApplyNonceAndGasPrice(ctx context.Context, tx ...*transaction.FrontendTransaction) error
+	SendTransactions(ctx context.Context, txs ...*transaction.FrontendTransaction) ([]string, error)
 	IsInterfaceNil() bool
 }
