@@ -91,7 +91,7 @@ func (ts *txSender) SendTxs(ctx context.Context, data *sovereign.BridgeOperation
 }
 
 func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.BridgeOperations) ([]string, error) {
-	txsToSend := make([]*coreTx.FrontendTransaction, 0)
+	txHashes := make([]string, 0)
 	txsData := ts.dataFormatter.CreateTxsData(data)
 
 	for _, txData := range txsData {
@@ -122,6 +122,7 @@ func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.Bridge
 			}
 		default:
 			log.Error("invalid tx data received", "data", string(txData))
+			continue
 		}
 
 		err := ts.txNonceHandler.ApplyNonceAndGasPrice(ctx, tx)
@@ -134,12 +135,13 @@ func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.Bridge
 			return nil, err
 		}
 
-		txsToSend = append(txsToSend, tx)
-	}
+		hash, err := ts.txNonceHandler.SendTransactions(ctx, tx)
+		if err != nil {
+			log.Error("failed to send tx", "error", err, "nonce", tx.Nonce)
+			return nil, err
+		}
 
-	txHashes, err := ts.txNonceHandler.SendTransactions(ctx, txsToSend...)
-	if err != nil {
-		return nil, err
+		txHashes = append(txHashes, hash...)
 	}
 
 	return txHashes, nil
