@@ -30,7 +30,7 @@ func CreateTxSender(wallet core.CryptoComponentsHolder, cfg TxSenderConfig) (*tx
 
 	nonceHandler, err := nonceHandlerV3.NewNonceTransactionHandlerV3(nonceHandlerV3.ArgsNonceTransactionsHandlerV3{
 		Proxy:          proxy,
-		IntervalToSend: time.Second * time.Duration(cfg.MaxRetriesSecondsWaitNonce),
+		IntervalToSend: time.Millisecond * time.Duration(cfg.IntervalToSend),
 	})
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func CreateTxSender(wallet core.CryptoComponentsHolder, cfg TxSenderConfig) (*tx
 		TxInteractor:      ti,
 		TxNonceHandler:    nonceHandler,
 		DataFormatter:     dtaFormatter,
-		SCMultiSigAddress: cfg.MultisigSCAddress,
+		SCMultiSigAddress: cfg.HeaderVerifierSCAddress,
 		SCEsdtSafeAddress: cfg.EsdtSafeSCAddress,
 	})
 }

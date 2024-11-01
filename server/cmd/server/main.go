@@ -37,16 +37,16 @@ const (
 )
 
 const (
-	envGRPCPort            = "GRPC_PORT"
-	envWallet              = "WALLET_PATH"
-	envPassword            = "WALLET_PASSWORD"
-	envMultiSigSCAddr      = "MULTI_SIG_SC_ADDRESS"
-	envEsdtSafeSCAddr      = "ESDT_SAFE_SC_ADDRESS"
-	envMultiversXProxy     = "MULTIVERSX_PROXY"
-	envMaxRetriesWaitNonce = "MAX_RETRIES_SECONDS_WAIT_NONCE"
-	envCertFile            = "CERT_FILE"
-	envCertPkFile          = "CERT_PK_FILE"
-	envHasher              = "HASHER"
+	envGRPCPort             = "GRPC_PORT"
+	envWallet               = "WALLET_PATH"
+	envPassword             = "WALLET_PASSWORD"
+	envHeaderVerifierSCAddr = "HEADER_VERIFIER_SC_ADDRESS"
+	envEsdtSafeSCAddr       = "ESDT_SAFE_SC_ADDRESS"
+	envMultiversXProxy      = "MULTIVERSX_PROXY"
+	envIntervalToSend       = "INTERVAL_TO_SEND"
+	envCertFile             = "CERT_FILE"
+	envCertPkFile           = "CERT_PK_FILE"
+	envHasher               = "HASHER"
 )
 
 func main() {
@@ -142,24 +142,24 @@ func loadConfig() (*config.ServerConfig, error) {
 	grpcPort := os.Getenv(envGRPCPort)
 	walletPath := os.Getenv(envWallet)
 	walletPassword := os.Getenv(envPassword)
-	multiSigSCAddress := os.Getenv(envMultiSigSCAddr)
+	headerVerifierSCAddress := os.Getenv(envHeaderVerifierSCAddr)
 	esdtSafeSCAddress := os.Getenv(envEsdtSafeSCAddr)
 	proxy := os.Getenv(envMultiversXProxy)
-	maxRetriesWaitNonceStr := os.Getenv(envMaxRetriesWaitNonce)
+	intervalToSendStr := os.Getenv(envIntervalToSend)
 	certFile := os.Getenv(envCertFile)
 	certPkFile := os.Getenv(envCertPkFile)
 	hasher := os.Getenv(envHasher)
 
-	maxRetriesWaitNonce, err := strconv.Atoi(maxRetriesWaitNonceStr)
+	intervalToSend, err := strconv.Atoi(intervalToSendStr)
 	if err != nil {
 		return nil, err
 	}
 
 	log.Info("loaded config", "grpc port", grpcPort)
-	log.Info("loaded config", "multiSigSCAddress", multiSigSCAddress)
+	log.Info("loaded config", "headerVerifierSCAddress", headerVerifierSCAddress)
 	log.Info("loaded config", "esdtSafeSCAddress", esdtSafeSCAddress)
 	log.Info("loaded config", "proxy", proxy)
-	log.Info("loaded config", "maxRetriesWaitNonce", maxRetriesWaitNonce)
+	log.Info("loaded config", "intervalToSend", intervalToSend)
 	log.Info("loaded config", "hasher", hasher)
 
 	log.Info("loaded config", "certificate file", certFile)
@@ -172,11 +172,11 @@ func loadConfig() (*config.ServerConfig, error) {
 			Password: walletPassword,
 		},
 		TxSenderConfig: txSender.TxSenderConfig{
-			MultisigSCAddress:          multiSigSCAddress,
-			EsdtSafeSCAddress:          esdtSafeSCAddress,
-			Proxy:                      proxy,
-			MaxRetriesSecondsWaitNonce: maxRetriesWaitNonce,
-			Hasher:                     hasher,
+			HeaderVerifierSCAddress: headerVerifierSCAddress,
+			EsdtSafeSCAddress:       esdtSafeSCAddress,
+			Proxy:                   proxy,
+			IntervalToSend:          intervalToSend,
+			Hasher:                  hasher,
 		},
 		CertificateConfig: cert.FileCfg{
 			CertFile: certFile,
