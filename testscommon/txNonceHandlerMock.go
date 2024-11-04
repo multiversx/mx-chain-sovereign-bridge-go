@@ -13,9 +13,9 @@ type TxNonceSenderHandlerMock struct {
 }
 
 // ApplyNonceAndGasPrice mocks the ApplyNonceAndGasPrice method
-func (mock *TxNonceSenderHandlerMock) ApplyNonceAndGasPrice(ctx context.Context, tx ...*transaction.FrontendTransaction) error {
+func (mock *TxNonceSenderHandlerMock) ApplyNonceAndGasPrice(ctx context.Context, txs ...*transaction.FrontendTransaction) error {
 	if mock.ApplyNonceAndGasPriceCalled != nil {
-		return mock.ApplyNonceAndGasPriceCalled(ctx, tx...)
+		return mock.ApplyNonceAndGasPriceCalled(ctx, txs...)
 	}
 	return nil
 }

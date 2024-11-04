@@ -127,8 +127,8 @@ func TestTxSender_SendTxs(t *testing.T) {
 		},
 	}
 	args.TxNonceHandler = &testscommon.TxNonceSenderHandlerMock{
-		ApplyNonceAndGasPriceCalled: func(ctx context.Context, tx ...*transaction.FrontendTransaction) error {
-			require.Len(t, tx, 1) // we update nonce one at a time
+		ApplyNonceAndGasPriceCalled: func(ctx context.Context, txs ...*transaction.FrontendTransaction) error {
+			require.Len(t, txs, 1) // we update transactions one at a time
 			require.Equal(t, &transaction.FrontendTransaction{
 				Nonce:    0,
 				Value:    "0",
@@ -139,10 +139,10 @@ func TestTxSender_SendTxs(t *testing.T) {
 				Data:     expectedTxsData[expectedDataIdx],
 				ChainID:  expectedNetworkConfig.ChainID,
 				Version:  expectedNetworkConfig.MinTransactionVersion,
-			}, tx[0])
+			}, txs[0])
 
 			expectedNonce++
-			tx[0].Nonce = uint64(expectedNonce)
+			txs[0].Nonce = uint64(expectedNonce)
 			return nil
 		},
 		SendTransactionsCalled: func(ctx context.Context, txs ...*transaction.FrontendTransaction) ([]string, error) {
