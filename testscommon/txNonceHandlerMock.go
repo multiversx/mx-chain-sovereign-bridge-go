@@ -8,7 +8,7 @@ import (
 
 // TxNonceSenderHandlerMock mocks TxNonceSenderHandler interface
 type TxNonceSenderHandlerMock struct {
-	ApplyNonceAndGasPriceCalled func(ctx context.Context, tx ...*transaction.FrontendTransaction) error
+	ApplyNonceAndGasPriceCalled func(ctx context.Context, txs ...*transaction.FrontendTransaction) error
 	SendTransactionsCalled      func(ctx context.Context, txs ...*transaction.FrontendTransaction) ([]string, error)
 }
 
