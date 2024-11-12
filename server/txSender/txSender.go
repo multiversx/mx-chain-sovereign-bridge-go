@@ -72,7 +72,7 @@ func checkArgs(args TxSenderArgs) error {
 		return errNilNonceHandler
 	}
 	if len(args.SCHeaderVerifierAddress) == 0 {
-		return errNoMultiSigSCAddress
+		return errNoHeaderVerifierSCAddress
 	}
 	if len(args.SCEsdtSafeAddress) == 0 {
 		return errNoEsdtSafeSCAddress
