@@ -38,7 +38,7 @@ func (df *dataFormatter) CreateTxsData(data *sovereign.BridgeOperations) [][]byt
 	}
 
 	for _, bridgeData := range data.Data {
-		log.Debug("creating tx data", "bridge op hash", bridgeData.Hash)
+		log.Debug("creating tx data", "bridge op hash", bridgeData.Hash, "no. of operations", len(bridgeData.OutGoingOperations))
 
 		registerBridgeOpData := df.createRegisterBridgeOperationsData(bridgeData)
 		if len(registerBridgeOpData) != 0 {

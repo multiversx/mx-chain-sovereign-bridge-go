@@ -13,23 +13,23 @@ import (
 
 // TxSenderArgs holds args to create a new tx sender
 type TxSenderArgs struct {
-	Wallet            core.CryptoComponentsHolder
-	Proxy             Proxy
-	TxInteractor      TxInteractor
-	TxNonceHandler    TxNonceSenderHandler
-	DataFormatter     DataFormatter
-	SCMultiSigAddress string
-	SCEsdtSafeAddress string
+	Wallet                  core.CryptoComponentsHolder
+	Proxy                   Proxy
+	TxInteractor            TxInteractor
+	TxNonceHandler          TxNonceSenderHandler
+	DataFormatter           DataFormatter
+	SCHeaderVerifierAddress string
+	SCEsdtSafeAddress       string
 }
 
 type txSender struct {
-	wallet            core.CryptoComponentsHolder
-	netConfigs        *data.NetworkConfig
-	txInteractor      TxInteractor
-	txNonceHandler    TxNonceSenderHandler
-	dataFormatter     DataFormatter
-	scMultisigAddress string
-	scEsdtSafeAddress string
+	wallet                  core.CryptoComponentsHolder
+	netConfigs              *data.NetworkConfig
+	txInteractor            TxInteractor
+	txNonceHandler          TxNonceSenderHandler
+	dataFormatter           DataFormatter
+	scHeaderVerifierAddress string
+	scEsdtSafeAddress       string
 }
 
 // NewTxSender creates a new tx sender
@@ -45,13 +45,13 @@ func NewTxSender(args TxSenderArgs) (*txSender, error) {
 	}
 
 	return &txSender{
-		wallet:            args.Wallet,
-		netConfigs:        networkConfig,
-		txInteractor:      args.TxInteractor,
-		txNonceHandler:    args.TxNonceHandler,
-		dataFormatter:     args.DataFormatter,
-		scMultisigAddress: args.SCMultiSigAddress,
-		scEsdtSafeAddress: args.SCEsdtSafeAddress,
+		wallet:                  args.Wallet,
+		netConfigs:              networkConfig,
+		txInteractor:            args.TxInteractor,
+		txNonceHandler:          args.TxNonceHandler,
+		dataFormatter:           args.DataFormatter,
+		scHeaderVerifierAddress: args.SCHeaderVerifierAddress,
+		scEsdtSafeAddress:       args.SCEsdtSafeAddress,
 	}, nil
 }
 
@@ -71,8 +71,8 @@ func checkArgs(args TxSenderArgs) error {
 	if check.IfNil(args.TxNonceHandler) {
 		return errNilNonceHandler
 	}
-	if len(args.SCMultiSigAddress) == 0 {
-		return errNoMultiSigSCAddress
+	if len(args.SCHeaderVerifierAddress) == 0 {
+		return errNoHeaderVerifierSCAddress
 	}
 	if len(args.SCEsdtSafeAddress) == 0 {
 		return errNoEsdtSafeSCAddress
@@ -101,7 +101,7 @@ func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.Bridge
 		case strings.HasPrefix(string(txData), registerBridgeOpsPrefix):
 			tx = &coreTx.FrontendTransaction{
 				Value:    "0",
-				Receiver: ts.scMultisigAddress,
+				Receiver: ts.scHeaderVerifierAddress,
 				Sender:   ts.wallet.GetBech32(),
 				GasPrice: ts.netConfigs.MinGasPrice,
 				GasLimit: 50_000_000, // todo
@@ -122,9 +122,10 @@ func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.Bridge
 			}
 		default:
 			log.Error("invalid tx data received", "data", string(txData))
+			continue
 		}
 
-		err := ts.txNonceHandler.ApplyNonceAndGasPrice(ctx, ts.wallet.GetAddressHandler(), tx)
+		err := ts.txNonceHandler.ApplyNonceAndGasPrice(ctx, tx)
 		if err != nil {
 			return nil, err
 		}
@@ -134,12 +135,13 @@ func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.Bridge
 			return nil, err
 		}
 
-		hash, err := ts.txNonceHandler.SendTransaction(ctx, tx)
+		hash, err := ts.txNonceHandler.SendTransactions(ctx, tx)
 		if err != nil {
+			log.Error("failed to send tx", "error", err, "nonce", tx.Nonce)
 			return nil, err
 		}
 
-		txHashes = append(txHashes, hash)
+		txHashes = append(txHashes, hash...)
 	}
 
 	return txHashes, nil

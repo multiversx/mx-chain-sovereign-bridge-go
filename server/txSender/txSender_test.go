@@ -16,19 +16,19 @@ import (
 )
 
 const (
-	scMultiSigAddress = "erd1qqq"
-	scEsdtSafeAddress = "erd1qqqe"
+	scHeaderVerifierAddress = "erd1qqq"
+	scEsdtSafeAddress       = "erd1qqqe"
 )
 
 func createArgs() TxSenderArgs {
 	return TxSenderArgs{
-		Wallet:            &testscommon.CryptoComponentsHolderMock{},
-		Proxy:             &testscommon.ProxyMock{},
-		TxInteractor:      &testscommon.TxInteractorMock{},
-		DataFormatter:     &testscommon.DataFormatterMock{},
-		TxNonceHandler:    &testscommon.TxNonceSenderHandlerMock{},
-		SCMultiSigAddress: scMultiSigAddress,
-		SCEsdtSafeAddress: scEsdtSafeAddress,
+		Wallet:                  &testscommon.CryptoComponentsHolderMock{},
+		Proxy:                   &testscommon.ProxyMock{},
+		TxInteractor:            &testscommon.TxInteractorMock{},
+		DataFormatter:           &testscommon.DataFormatterMock{},
+		TxNonceHandler:          &testscommon.TxNonceSenderHandlerMock{},
+		SCHeaderVerifierAddress: scHeaderVerifierAddress,
+		SCEsdtSafeAddress:       scEsdtSafeAddress,
 	}
 }
 
@@ -89,7 +89,7 @@ func TestTxSender_SendTxs(t *testing.T) {
 		[]byte(executeBridgeOpsPrefix + "txData3"),
 	}
 	expectedTxsReceiver := []string{
-		scMultiSigAddress,
+		scHeaderVerifierAddress,
 		scEsdtSafeAddress,
 		scEsdtSafeAddress,
 	}
@@ -127,7 +127,8 @@ func TestTxSender_SendTxs(t *testing.T) {
 		},
 	}
 	args.TxNonceHandler = &testscommon.TxNonceSenderHandlerMock{
-		ApplyNonceAndGasPriceCalled: func(ctx context.Context, address core.AddressHandler, tx *transaction.FrontendTransaction) error {
+		ApplyNonceAndGasPriceCalled: func(ctx context.Context, txs ...*transaction.FrontendTransaction) error {
+			require.Len(t, txs, 1) // we update transactions one at a time
 			require.Equal(t, &transaction.FrontendTransaction{
 				Nonce:    0,
 				Value:    "0",
@@ -138,18 +139,19 @@ func TestTxSender_SendTxs(t *testing.T) {
 				Data:     expectedTxsData[expectedDataIdx],
 				ChainID:  expectedNetworkConfig.ChainID,
 				Version:  expectedNetworkConfig.MinTransactionVersion,
-			}, tx)
+			}, txs[0])
 
 			expectedNonce++
-			tx.Nonce = uint64(expectedNonce)
+			txs[0].Nonce = uint64(expectedNonce)
 			return nil
 		},
-		SendTransactionCalled: func(ctx context.Context, tx *transaction.FrontendTransaction) (string, error) {
+		SendTransactionsCalled: func(ctx context.Context, txs ...*transaction.FrontendTransaction) ([]string, error) {
 			defer func() {
 				expectedDataIdx++
 			}()
 
 			require.Equal(t, expectedCtx, ctx)
+			require.Len(t, txs, 1) // we send transactions one at a time
 			require.Equal(t, &transaction.FrontendTransaction{
 				Nonce:     uint64(expectedNonce),
 				Value:     "0",
@@ -161,9 +163,9 @@ func TestTxSender_SendTxs(t *testing.T) {
 				Signature: expectedSigs[expectedDataIdx],
 				ChainID:   expectedNetworkConfig.ChainID,
 				Version:   expectedNetworkConfig.MinTransactionVersion,
-			}, tx)
+			}, txs[0])
 
-			return expectedTxHashes[expectedDataIdx], nil
+			return []string{expectedTxHashes[expectedDataIdx]}, nil
 		},
 	}
 
@@ -194,7 +196,7 @@ func TestTxSender_SendTxsConcurrently(t *testing.T) {
 		},
 	}
 	args.TxNonceHandler = &testscommon.TxNonceSenderHandlerMock{
-		SendTransactionCalled: func(ctx context.Context, tx *transaction.FrontendTransaction) (string, error) {
+		SendTransactionsCalled: func(ctx context.Context, txs ...*transaction.FrontendTransaction) ([]string, error) {
 			defer func() {
 				numSentTxs++
 				wg.Done()
@@ -202,7 +204,7 @@ func TestTxSender_SendTxsConcurrently(t *testing.T) {
 			}()
 
 			mut.Lock()
-			return "hash", nil
+			return []string{"hash"}, nil
 		},
 	}
 
