@@ -5,7 +5,9 @@ import (
 	"testing"
 
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
+
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/testscommon"
+
 	"github.com/stretchr/testify/require"
 )
 

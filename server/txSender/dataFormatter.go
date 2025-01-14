@@ -7,6 +7,8 @@ import (
 	"github.com/multiversx/mx-chain-core-go/core"
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
+	"github.com/multiversx/mx-chain-core-go/data/typeConverters"
+	"github.com/multiversx/mx-chain-core-go/data/typeConverters/uint64ByteSlice"
 	"github.com/multiversx/mx-chain-core-go/hashing"
 )
 
@@ -16,7 +18,8 @@ const (
 )
 
 type dataFormatter struct {
-	hasher hashing.Hasher
+	hasher        hashing.Hasher
+	uIntConverter typeConverters.Uint64ByteSliceConverter
 }
 
 // NewDataFormatter creates a sovereign bridge tx data formatter
@@ -26,7 +29,8 @@ func NewDataFormatter(hasher hashing.Hasher) (*dataFormatter, error) {
 	}
 
 	return &dataFormatter{
-		hasher: hasher,
+		hasher:        hasher,
+		uIntConverter: uint64ByteSlice.NewBigEndianConverter(),
 	}, nil
 }
 
@@ -65,9 +69,15 @@ func (df *dataFormatter) createRegisterBridgeOperationsData(bridgeData *sovereig
 		return nil
 	}
 
+	// TODO: Here, create a new uint32 converter or just use binary.Uin32 std library
+
 	registerBridgeOpData := []byte(registerBridgeOpsPrefix +
 		"@" + hex.EncodeToString(bridgeData.AggregatedSignature) +
-		"@" + hex.EncodeToString(bridgeData.Hash))
+		"@" + hex.EncodeToString(bridgeData.Hash) +
+		"@" + hex.EncodeToString(bridgeData.PubKeysBitmap) +
+		"@" + hex.EncodeToString(df.uIntConverter.ToByteSlice(uint64(bridgeData.Epoch))))
+
+	log.Error("register data", "msg", string(registerBridgeOpData))
 
 	return append(registerBridgeOpData, hashesHexEncodedArgs...)
 }
