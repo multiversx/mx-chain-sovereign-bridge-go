@@ -73,13 +73,14 @@ func (df *dataFormatter) createRegisterBridgeOperationsData(bridgeData *sovereig
 
 	registerBridgeOpData := []byte(registerBridgeOpsPrefix +
 		"@" + hex.EncodeToString(bridgeData.AggregatedSignature) +
-		"@" + hex.EncodeToString(bridgeData.Hash) +
+		"@" + hex.EncodeToString(bridgeData.Hash))
+	registerBridgeOpData = append(registerBridgeOpData, hashesHexEncodedArgs...)
+
+	bridgeDataArgs := []byte(
 		"@" + hex.EncodeToString(bridgeData.PubKeysBitmap) +
-		"@" + hex.EncodeToString(df.uIntConverter.ToByteSlice(uint64(bridgeData.Epoch))))
+			"@" + hex.EncodeToString(df.uIntConverter.ToByteSlice(uint64(bridgeData.Epoch))))
 
-	log.Error("register data", "msg", string(registerBridgeOpData))
-
-	return append(registerBridgeOpData, hashesHexEncodedArgs...)
+	return append(registerBridgeOpData, bridgeDataArgs...)
 }
 
 func createBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
