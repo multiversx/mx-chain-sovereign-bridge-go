@@ -6,10 +6,12 @@ import (
 
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	logger "github.com/multiversx/mx-chain-logger-go"
-	"github.com/multiversx/mx-chain-sovereign-bridge-go/cert"
-	"github.com/multiversx/mx-chain-sovereign-bridge-go/client/config"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/cert"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/client/config"
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/client/disabled"
 )
 
 const (
@@ -20,6 +22,10 @@ var log = logger.GetOrCreate("client")
 
 // CreateClient creates a grpc client with retries
 func CreateClient(cfg *config.ClientConfig) (ClientHandler, error) {
+	if !cfg.Enabled {
+		return disabled.NewClient(), nil
+	}
+
 	dialTarget := fmt.Sprintf("%s:%s", cfg.GRPCHost, cfg.GRPCPort)
 	conn, err := connectWithRetries(dialTarget, cfg.CertificateCfg)
 	if err != nil {
