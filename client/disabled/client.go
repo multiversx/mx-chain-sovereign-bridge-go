@@ -8,17 +8,17 @@ import (
 
 type client struct{}
 
-// NewClient creates a new instance of disabled client
-func NewClient() *client {
+// NewDisabledClient creates a new instance of disabled client
+func NewDisabledClient() *client {
 	return &client{}
 }
 
-// Send -
+// Send does nothing and returns empty bridge operations response
 func (c *client) Send(_ context.Context, _ *sovereign.BridgeOperations) (*sovereign.BridgeOperationsResponse, error) {
 	return &sovereign.BridgeOperationsResponse{}, nil
 }
 
-// Close -
+// Close returns no error
 func (c *client) Close() error {
 	return nil
 }

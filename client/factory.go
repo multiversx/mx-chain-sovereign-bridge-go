@@ -23,7 +23,7 @@ var log = logger.GetOrCreate("client")
 // CreateClient creates a grpc client with retries
 func CreateClient(cfg *config.ClientConfig) (ClientHandler, error) {
 	if !cfg.Enabled {
-		return disabled.NewClient(), nil
+		return disabled.NewDisabledClient(), nil
 	}
 
 	dialTarget := fmt.Sprintf("%s:%s", cfg.GRPCHost, cfg.GRPCPort)
