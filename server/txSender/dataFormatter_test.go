@@ -123,10 +123,10 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 			registerBridgeOpsPrefix +
 				"@" + hex.EncodeToString(aggregatedSig1) +
 				"@" + hex.EncodeToString(bridgeDataHash1) +
-				"@" + hex.EncodeToString(opHash1) +
-				"@" + hex.EncodeToString(opHash2) +
 				"@" + hex.EncodeToString(pubKeysBitmap1) +
-				"@" + "00000001")
+				"@" + "00000001" +
+				"@" + hex.EncodeToString(opHash1) +
+				"@" + hex.EncodeToString(opHash2))
 		execOp1 := []byte(executeBridgeOpsPrefix +
 			"@" + hex.EncodeToString(bridgeDataHash1) +
 			"@" + hex.EncodeToString(bridgeDataOp1))
@@ -138,9 +138,9 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 			registerBridgeOpsPrefix +
 				"@" + hex.EncodeToString(aggregatedSig2) +
 				"@" + hex.EncodeToString(bridgeDataHash2) +
-				"@" + hex.EncodeToString(opHash3) +
 				"@" + hex.EncodeToString(pubKeysBitmap2) +
-				"@" + "00000002")
+				"@" + "00000002" +
+				"@" + hex.EncodeToString(opHash3))
 		execOp3 := []byte(executeBridgeOpsPrefix +
 			"@" + hex.EncodeToString(bridgeDataHash2) +
 			"@" + hex.EncodeToString(bridgeDataOp3))

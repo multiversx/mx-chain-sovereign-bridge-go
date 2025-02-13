@@ -68,14 +68,11 @@ func (df *dataFormatter) createRegisterBridgeOperationsData(bridgeData *sovereig
 
 	registerBridgeOpData := []byte(registerBridgeOpsPrefix +
 		"@" + hex.EncodeToString(bridgeData.AggregatedSignature) +
-		"@" + hex.EncodeToString(bridgeData.Hash))
-	registerBridgeOpData = append(registerBridgeOpData, hashesHexEncodedArgs...)
-
-	bridgeDataArgs := []byte(
+		"@" + hex.EncodeToString(bridgeData.Hash) +
 		"@" + hex.EncodeToString(bridgeData.PubKeysBitmap) +
-			"@" + hex.EncodeToString(uint32ToBytes(bridgeData.Epoch)))
+		"@" + hex.EncodeToString(uint32ToBytes(bridgeData.Epoch)))
 
-	return append(registerBridgeOpData, bridgeDataArgs...)
+	return append(registerBridgeOpData, hashesHexEncodedArgs...)
 }
 
 func uint32ToBytes(value uint32) []byte {

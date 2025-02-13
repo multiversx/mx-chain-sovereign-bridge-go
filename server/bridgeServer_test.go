@@ -5,10 +5,9 @@ import (
 	"testing"
 
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
+	"github.com/stretchr/testify/require"
 
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/testscommon"
-
-	"github.com/stretchr/testify/require"
 )
 
 func TestNewSovereignBridgeTxServer(t *testing.T) {
