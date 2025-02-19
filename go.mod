@@ -6,13 +6,12 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/gorilla/websocket v1.5.0
 	github.com/joho/godotenv v1.5.1
-	github.com/multiversx/mx-chain-core-go v1.2.24-0.20250113143225-72ba2e508401
+	github.com/multiversx/mx-chain-core-go v1.2.25-0.20250219094226-05f41be8a964
 	github.com/multiversx/mx-chain-crypto-go v1.2.11
 	github.com/multiversx/mx-chain-go v1.7.12
 	github.com/multiversx/mx-chain-logger-go v1.0.14
 	github.com/multiversx/mx-sdk-go v1.4.4-0.20241105143052-f5830f5b9079
 	github.com/stretchr/testify v1.8.4
-	github.com/tyler-smith/go-bip39 v1.1.0
 	github.com/urfave/cli v1.22.14
 	google.golang.org/grpc v1.60.1
 )
@@ -57,6 +56,7 @@ require (
 	github.com/tklauser/go-sysconf v0.3.4 // indirect
 	github.com/tklauser/numcpus v0.2.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
+	github.com/tyler-smith/go-bip39 v1.1.0 // indirect
 	github.com/ugorji/go/codec v1.2.11 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	golang.org/x/arch v0.3.0 // indirect

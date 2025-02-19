@@ -17,3 +17,5 @@ var errNilNonceHandler = errors.New("nil nonce handler provided")
 var errNoHeaderVerifierSCAddress = errors.New("no header verifier sc address provided")
 
 var errNoEsdtSafeSCAddress = errors.New("no esdt safe sc address provided")
+
+var errInvalidBridgeDataSetValidatorChange = errors.New("invalid number of bridge data operations for validator set change")
