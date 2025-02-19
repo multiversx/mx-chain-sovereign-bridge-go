@@ -84,9 +84,9 @@ func TestTxSender_SendTxs(t *testing.T) {
 	expectedDataIdx := 0
 	expectedTxHashes := []string{"txHash1", "txHash2", "txHash3"}
 	expectedTxsData := [][]byte{
-		[]byte(registerBridgeOpsPrefix + "txData1"),
-		[]byte(executeBridgeOpsPrefix + "txData2"),
-		[]byte(executeBridgeOpsPrefix + "txData3"),
+		[]byte(registerBridgeOpsPrefix + "@" + "txData1"),
+		[]byte(executeBridgeOpsPrefix + "@" + "txData2"),
+		[]byte(executeBridgeOpsPrefix + "@" + "txData3"),
 	}
 	expectedTxsReceiver := []string{
 		scHeaderVerifierAddress,
@@ -192,7 +192,7 @@ func TestTxSender_SendTxsConcurrently(t *testing.T) {
 
 	args.DataFormatter = &testscommon.DataFormatterMock{
 		CreateTxsDataCalled: func(data *sovereign.BridgeOperations) [][]byte {
-			return [][]byte{[]byte(executeBridgeOpsPrefix + "txData")}
+			return [][]byte{[]byte(executeBridgeOpsPrefix + "@" + "txData")}
 		},
 	}
 	args.TxNonceHandler = &testscommon.TxNonceSenderHandlerMock{

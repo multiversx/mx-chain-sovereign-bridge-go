@@ -9,6 +9,11 @@ import (
 	"github.com/multiversx/mx-chain-core-go/hashing"
 )
 
+const (
+	registerBridgeOpsPrefix = "registerBridgeOps"
+	executeBridgeOpsPrefix  = "executeBridgeOps"
+)
+
 type dataFormatterDepositTokens struct {
 	hasher hashing.Hasher
 }
@@ -20,7 +25,7 @@ func (df *dataFormatterDepositTokens) createTxsData(bridgeData *sovereign.Bridge
 		txsData = append(txsData, registerBridgeOpData)
 	}
 
-	return append(txsData, createBridgeOperationsData(bridgeData.Hash, bridgeData.OutGoingOperations)...), nil
+	return append(txsData, createExecuteBridgeOperationsData(bridgeData.Hash, bridgeData.OutGoingOperations)...), nil
 }
 
 func (df *dataFormatterDepositTokens) createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData) []byte {
@@ -52,7 +57,7 @@ func uint32ToBytes(value uint32) []byte {
 	return buff
 }
 
-func createBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
+func createExecuteBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
 	executeBridgeOpsTxData := make([][]byte, 0)
 	for _, operation := range outGoingOperations {
 		bridgeOpTxData := []byte(

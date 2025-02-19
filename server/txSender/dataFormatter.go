@@ -8,11 +8,6 @@ import (
 	"github.com/multiversx/mx-chain-core-go/hashing"
 )
 
-const (
-	registerBridgeOpsPrefix = "registerBridgeOps"
-	executeBridgeOpsPrefix  = "executeBridgeOps"
-)
-
 type dataFormatter struct {
 	dataFormatterHandlers map[int32]txDataFormatter
 }
