@@ -17,16 +17,16 @@ func newDataFormatterValidatorSetChange() *dataFormatterValidatorSetChange {
 	return &dataFormatterValidatorSetChange{}
 }
 
-// createValidatorSetChangeData will format the data to the following format:
+// createTxsData will format the data to the following format:
 //
 // changeValidatorSet@HashOfHashes@HashOfOperation@AggregatedBLSMultiSig@PubKeysBitMap@Epoch@list<allKeyIDsInNewEpoch>
-func (df *dataFormatterValidatorSetChange) createValidatorSetChangeData(bridgeData *sovereign.BridgeOutGoingData) ([]byte, error) {
+func (df *dataFormatterValidatorSetChange) createTxsData(bridgeData *sovereign.BridgeOutGoingData) ([][]byte, error) {
 	numOutGoingOperations := len(bridgeData.OutGoingOperations)
 	if numOutGoingOperations != 1 {
 		return nil, fmt.Errorf("%w, expected 1, got %d", errInvalidBridgeDataSetValidatorChange, numOutGoingOperations)
 	}
 
-	pubKeys, err := df.formatPubKeys(bridgeData.OutGoingOperations[0].Data)
+	pubKeys, err := formatPubKeys(bridgeData.OutGoingOperations[0].Data)
 	if err != nil {
 		return nil, err
 	}
@@ -38,10 +38,10 @@ func (df *dataFormatterValidatorSetChange) createValidatorSetChangeData(bridgeDa
 		"@" + hex.EncodeToString(bridgeData.PubKeysBitmap) +
 		"@" + hex.EncodeToString(uint32ToBytes(bridgeData.Epoch)))
 
-	return append(txData, pubKeys...), nil
+	return [][]byte{append(txData, pubKeys...)}, nil
 }
 
-func (df *dataFormatterValidatorSetChange) formatPubKeys(data []byte) ([]byte, error) {
+func formatPubKeys(data []byte) ([]byte, error) {
 	pubKeysBridgeData := &sovereign.BridgeOutGoingDataValidatorSetChange{
 		PubKeyIDs: make([][]byte, 0),
 	}

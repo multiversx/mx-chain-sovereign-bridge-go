@@ -11,7 +11,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCreateValidatorSetChangeData(t *testing.T) {
+func TestDataFormatterValidatorSetChange_createTxsData(t *testing.T) {
 	dataFormatterValidators := newDataFormatterValidatorSetChange()
 
 	pubKey1 := []byte("pk1")
@@ -45,7 +45,7 @@ func TestCreateValidatorSetChangeData(t *testing.T) {
 		"@" + hex.EncodeToString(pubKey1) +
 		"@" + hex.EncodeToString(pubKey2))
 
-	txData, err := dataFormatterValidators.createValidatorSetChangeData(bridgeData)
+	txData, err := dataFormatterValidators.createTxsData(bridgeData)
 	require.Nil(t, err)
-	require.Equal(t, expectedTxData, txData)
+	require.Equal(t, [][]byte{expectedTxData}, txData)
 }
