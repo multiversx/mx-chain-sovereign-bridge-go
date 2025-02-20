@@ -14,13 +14,14 @@ import (
 
 // TxSenderArgs holds args to create a new tx sender
 type TxSenderArgs struct {
-	Wallet                  core.CryptoComponentsHolder
-	Proxy                   Proxy
-	TxInteractor            TxInteractor
-	TxNonceHandler          TxNonceSenderHandler
-	DataFormatter           DataFormatter
-	SCHeaderVerifierAddress string
-	SCEsdtSafeAddress       string
+	Wallet                    core.CryptoComponentsHolder
+	Proxy                     Proxy
+	TxInteractor              TxInteractor
+	TxNonceHandler            TxNonceSenderHandler
+	DataFormatter             DataFormatter
+	SCHeaderVerifierAddress   string
+	SCEsdtSafeAddress         string
+	SCChangeValidatorsAddress string
 }
 
 type txConfig struct {
@@ -55,8 +56,9 @@ func NewTxSender(args TxSenderArgs) (*txSender, error) {
 		txNonceHandler: args.TxNonceHandler,
 		dataFormatter:  args.DataFormatter,
 		txConfigs: map[string]*txConfig{
-			registerBridgeOpsPrefix: {receiver: args.SCHeaderVerifierAddress},
-			executeBridgeOpsPrefix:  {receiver: args.SCEsdtSafeAddress},
+			registerBridgeOpsPrefix:  {receiver: args.SCHeaderVerifierAddress},
+			executeBridgeOpsPrefix:   {receiver: args.SCEsdtSafeAddress},
+			changeValidatorSetPrefix: {receiver: args.SCChangeValidatorsAddress},
 		},
 	}, nil
 }
@@ -82,6 +84,9 @@ func checkArgs(args TxSenderArgs) error {
 	}
 	if len(args.SCEsdtSafeAddress) == 0 {
 		return errNoEsdtSafeSCAddress
+	}
+	if len(args.SCChangeValidatorsAddress) == 0 {
+		return errNoChangeValidatorSetSCAddress
 	}
 
 	return nil

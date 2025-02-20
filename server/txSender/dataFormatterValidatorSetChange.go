@@ -4,8 +4,8 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
+	"google.golang.org/protobuf/proto"
 )
 
 const changeValidatorSetPrefix = "changeValidatorSet"

@@ -4,9 +4,9 @@ import (
 	"encoding/hex"
 	"testing"
 
-	"github.com/golang/protobuf/proto"
 	"github.com/multiversx/mx-chain-core-go/data/block"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/stretchr/testify/require"
 )

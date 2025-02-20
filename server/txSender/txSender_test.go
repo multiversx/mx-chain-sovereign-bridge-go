@@ -16,19 +16,21 @@ import (
 )
 
 const (
-	scHeaderVerifierAddress = "erd1qqq"
-	scEsdtSafeAddress       = "erd1qqqe"
+	scHeaderVerifierAddress      = "erd1qqq"
+	scEsdtSafeAddress            = "erd1qqqe"
+	scChangeValidatorsSetAddress = "erd1qqqw"
 )
 
 func createArgs() TxSenderArgs {
 	return TxSenderArgs{
-		Wallet:                  &testscommon.CryptoComponentsHolderMock{},
-		Proxy:                   &testscommon.ProxyMock{},
-		TxInteractor:            &testscommon.TxInteractorMock{},
-		DataFormatter:           &testscommon.DataFormatterMock{},
-		TxNonceHandler:          &testscommon.TxNonceSenderHandlerMock{},
-		SCHeaderVerifierAddress: scHeaderVerifierAddress,
-		SCEsdtSafeAddress:       scEsdtSafeAddress,
+		Wallet:                    &testscommon.CryptoComponentsHolderMock{},
+		Proxy:                     &testscommon.ProxyMock{},
+		TxInteractor:              &testscommon.TxInteractorMock{},
+		DataFormatter:             &testscommon.DataFormatterMock{},
+		TxNonceHandler:            &testscommon.TxNonceSenderHandlerMock{},
+		SCHeaderVerifierAddress:   scHeaderVerifierAddress,
+		SCEsdtSafeAddress:         scEsdtSafeAddress,
+		SCChangeValidatorsAddress: scChangeValidatorsSetAddress,
 	}
 }
 
