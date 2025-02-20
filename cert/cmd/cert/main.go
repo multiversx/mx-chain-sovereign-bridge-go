@@ -4,8 +4,9 @@ import (
 	"os"
 
 	logger "github.com/multiversx/mx-chain-logger-go"
-	"github.com/multiversx/mx-chain-sovereign-bridge-go/cert"
 	"github.com/urfave/cli"
+
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/cert"
 )
 
 var log = logger.GetOrCreate("cert")
@@ -43,12 +44,14 @@ func generateCertificate(ctx *cli.Context) error {
 	organization := ctx.GlobalString(organizationFlag.Name)
 	dns := ctx.GlobalString(dnsFlag.Name)
 	availability := ctx.GlobalInt64(availabilityFlag.Name)
+	ipAddress := ctx.GlobalString(ipAddressFlag.Name)
 
 	err := cert.GenerateCertFiles(cert.CertificateCfg{
 		CertCfg: cert.CertCfg{
 			Organization: organization,
 			DNSName:      dns,
 			Availability: availability,
+			IPAddress:    ipAddress,
 		},
 		CertFileCfg: cert.FileCfg{
 			CertFile: "certificate.crt",
