@@ -19,7 +19,7 @@ var (
 		Value: "365",
 	}
 	ipFlag = cli.StringFlag{
-		Name:  "ipFlag",
+		Name:  "ip",
 		Usage: "This flag specifies the certificate IP address",
 		Value: "127.0.0.1",
 	}
