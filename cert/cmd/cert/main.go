@@ -30,7 +30,7 @@ func main() {
 		organizationFlag,
 		dnsFlag,
 		availabilityFlag,
-		ipAddressFlag,
+		ipFlag,
 	}
 
 	err := app.Run(os.Args)
@@ -45,7 +45,7 @@ func generateCertificate(ctx *cli.Context) error {
 	organization := ctx.GlobalString(organizationFlag.Name)
 	dns := ctx.GlobalString(dnsFlag.Name)
 	availability := ctx.GlobalInt64(availabilityFlag.Name)
-	ipAddress := ctx.GlobalString(ipAddressFlag.Name)
+	ipAddress := ctx.GlobalString(ipFlag.Name)
 
 	err := cert.GenerateCertFiles(cert.CertificateCfg{
 		CertCfg: cert.CertCfg{
