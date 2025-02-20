@@ -22,4 +22,4 @@ var errNoChangeValidatorSetSCAddress = errors.New("no change validator set sc ad
 
 var errInvalidBridgeDataSetValidatorChange = errors.New("invalid number of bridge data operations for validator set change")
 
-var errInvalidTxDataPrefix = errors.New("invalid/unknown tx data prefix")
+var errInvalidTxDataPrefix = errors.New("invalid/unknown tx data endpoint to call")

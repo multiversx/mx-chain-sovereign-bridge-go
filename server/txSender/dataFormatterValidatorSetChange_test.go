@@ -12,6 +12,8 @@ import (
 )
 
 func TestDataFormatterValidatorSetChange_createTxsData(t *testing.T) {
+	t.Parallel()
+
 	dataFormatterValidators := newDataFormatterValidatorSetChange()
 
 	pubKey1 := []byte("pk1")
@@ -48,4 +50,41 @@ func TestDataFormatterValidatorSetChange_createTxsData(t *testing.T) {
 	txData, err := dataFormatterValidators.createTxsData(bridgeData)
 	require.Nil(t, err)
 	require.Equal(t, [][]byte{expectedTxData}, txData)
+}
+
+func TestDataFormatterValidatorSetChange_createTxsDataErrorCases(t *testing.T) {
+	t.Parallel()
+
+	dataFormatterValidators := newDataFormatterValidatorSetChange()
+
+	t.Run("invalid num of out going operations", func(t *testing.T) {
+		bridgeData := &sovereign.BridgeOutGoingData{
+			OutGoingOperations: []*sovereign.OutGoingOperation{
+				{
+					Data: []byte("data1"),
+				},
+				{
+					Data: []byte("data2"),
+				},
+			},
+		}
+
+		txData, err := dataFormatterValidators.createTxsData(bridgeData)
+		require.ErrorIs(t, err, errInvalidBridgeDataSetValidatorChange)
+		require.Nil(t, txData)
+	})
+
+	t.Run("invalid data in out going operation", func(t *testing.T) {
+		bridgeData := &sovereign.BridgeOutGoingData{
+			OutGoingOperations: []*sovereign.OutGoingOperation{
+				{
+					Data: []byte("invalid data"),
+				},
+			},
+		}
+
+		txData, err := dataFormatterValidators.createTxsData(bridgeData)
+		require.NotNil(t, err)
+		require.Nil(t, txData)
+	})
 }
