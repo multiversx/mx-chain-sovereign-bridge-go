@@ -30,6 +30,7 @@ func main() {
 		organizationFlag,
 		dnsFlag,
 		availabilityFlag,
+		ipAddressFlag,
 	}
 
 	err := app.Run(os.Args)
