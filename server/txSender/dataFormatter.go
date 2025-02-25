@@ -2,6 +2,7 @@ package txSender
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/hex"
 
 	"github.com/multiversx/mx-chain-core-go/core"
@@ -67,9 +68,17 @@ func (df *dataFormatter) createRegisterBridgeOperationsData(bridgeData *sovereig
 
 	registerBridgeOpData := []byte(registerBridgeOpsPrefix +
 		"@" + hex.EncodeToString(bridgeData.AggregatedSignature) +
-		"@" + hex.EncodeToString(bridgeData.Hash))
+		"@" + hex.EncodeToString(bridgeData.Hash) +
+		"@" + hex.EncodeToString(bridgeData.PubKeysBitmap) +
+		"@" + hex.EncodeToString(uint32ToBytes(bridgeData.Epoch)))
 
 	return append(registerBridgeOpData, hashesHexEncodedArgs...)
+}
+
+func uint32ToBytes(value uint32) []byte {
+	buff := make([]byte, 4)
+	binary.BigEndian.PutUint32(buff, value)
+	return buff
 }
 
 func createBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
