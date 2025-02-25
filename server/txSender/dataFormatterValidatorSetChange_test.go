@@ -39,9 +39,9 @@ func TestDataFormatterValidatorSetChange_createTxsData(t *testing.T) {
 	}
 
 	expectedTxData := []byte(changeValidatorSetPrefix +
+		"@" + hex.EncodeToString([]byte("aggregatedSig")) +
 		"@" + hex.EncodeToString([]byte("hashOfHashes")) +
 		"@" + hex.EncodeToString([]byte("operationHash")) +
-		"@" + hex.EncodeToString([]byte("aggregatedSig")) +
 		"@" + hex.EncodeToString([]byte("pubKeysBitmap")) +
 		"@" + "00000004" +
 		"@" + hex.EncodeToString(pubKey1) +

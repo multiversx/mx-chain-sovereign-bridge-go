@@ -32,9 +32,9 @@ func (df *dataFormatterValidatorSetChange) createTxsData(bridgeData *sovereign.B
 	}
 
 	txData := []byte(changeValidatorSetPrefix +
+		"@" + hex.EncodeToString(bridgeData.AggregatedSignature) +
 		"@" + hex.EncodeToString(bridgeData.Hash) +
 		"@" + hex.EncodeToString(bridgeData.OutGoingOperations[0].Hash) +
-		"@" + hex.EncodeToString(bridgeData.AggregatedSignature) +
 		"@" + hex.EncodeToString(bridgeData.PubKeysBitmap) +
 		"@" + hex.EncodeToString(uint32ToBytes(bridgeData.Epoch)))
 
