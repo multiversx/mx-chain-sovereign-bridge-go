@@ -9,10 +9,11 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	logger "github.com/multiversx/mx-chain-logger-go"
+	"github.com/urfave/cli"
+
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/cert"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/client"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/client/config"
-	"github.com/urfave/cli"
 )
 
 var log = logger.GetOrCreate("client-tx-sender")
@@ -149,6 +150,7 @@ func loadConfig() (*config.ClientConfig, error) {
 	log.Info("loaded config", "certificate pk", certPkFile)
 
 	return &config.ClientConfig{
+		Enabled:  true,
 		GRPCHost: grpcHost,
 		GRPCPort: grpcPort,
 		CertificateCfg: cert.FileCfg{

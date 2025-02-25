@@ -9,6 +9,7 @@ import (
 	"encoding/pem"
 	"fmt"
 	"math/big"
+	"net"
 	"os"
 	"time"
 
@@ -27,6 +28,7 @@ type CertificateCfg struct {
 type CertCfg struct {
 	Organization string
 	DNSName      string
+	IPAddress    string
 	Availability int64
 }
 
@@ -58,6 +60,7 @@ func GenerateCert(cfg CertCfg) ([]byte, *rsa.PrivateKey, error) {
 			CommonName:   cfg.Organization,
 		},
 		DNSNames:              []string{cfg.DNSName},
+		IPAddresses:           []net.IP{net.ParseIP(cfg.IPAddress)},
 		NotBefore:             time.Now(),
 		NotAfter:              time.Now().Add(time.Duration(cfg.Availability) * day),
 		KeyUsage:              x509.KeyUsageKeyEncipherment | x509.KeyUsageDigitalSignature,
