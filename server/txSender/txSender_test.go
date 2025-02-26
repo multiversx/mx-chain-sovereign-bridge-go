@@ -16,19 +16,21 @@ import (
 )
 
 const (
-	scHeaderVerifierAddress = "erd1qqq"
-	scEsdtSafeAddress       = "erd1qqqe"
+	scHeaderVerifierAddress      = "erd1qqq"
+	scEsdtSafeAddress            = "erd1qqqe"
+	scChangeValidatorsSetAddress = "erd1qqqw"
 )
 
 func createArgs() TxSenderArgs {
 	return TxSenderArgs{
-		Wallet:                  &testscommon.CryptoComponentsHolderMock{},
-		Proxy:                   &testscommon.ProxyMock{},
-		TxInteractor:            &testscommon.TxInteractorMock{},
-		DataFormatter:           &testscommon.DataFormatterMock{},
-		TxNonceHandler:          &testscommon.TxNonceSenderHandlerMock{},
-		SCHeaderVerifierAddress: scHeaderVerifierAddress,
-		SCEsdtSafeAddress:       scEsdtSafeAddress,
+		Wallet:                    &testscommon.CryptoComponentsHolderMock{},
+		Proxy:                     &testscommon.ProxyMock{},
+		TxInteractor:              &testscommon.TxInteractorMock{},
+		DataFormatter:             &testscommon.DataFormatterMock{},
+		TxNonceHandler:            &testscommon.TxNonceSenderHandlerMock{},
+		SCHeaderVerifierAddress:   scHeaderVerifierAddress,
+		SCEsdtSafeAddress:         scEsdtSafeAddress,
+		SCChangeValidatorsAddress: scChangeValidatorsSetAddress,
 	}
 }
 
@@ -67,12 +69,49 @@ func TestNewTxSender(t *testing.T) {
 		require.Nil(t, ts)
 		require.Equal(t, errNilDataFormatter, err)
 	})
+	t.Run("nil tx nonce handler", func(t *testing.T) {
+		args := createArgs()
+		args.TxNonceHandler = nil
+
+		ts, err := NewTxSender(args)
+		require.Nil(t, ts)
+		require.Equal(t, errNilNonceHandler, err)
+	})
+	t.Run("empty sc header verifier address", func(t *testing.T) {
+		args := createArgs()
+		args.SCHeaderVerifierAddress = ""
+
+		ts, err := NewTxSender(args)
+		require.Nil(t, ts)
+		require.Equal(t, errNoHeaderVerifierSCAddress, err)
+	})
+	t.Run("empty sc esdt safe address", func(t *testing.T) {
+		args := createArgs()
+		args.SCEsdtSafeAddress = ""
+
+		ts, err := NewTxSender(args)
+		require.Nil(t, ts)
+		require.Equal(t, errNoEsdtSafeSCAddress, err)
+	})
+	t.Run("empty sc change validators address", func(t *testing.T) {
+		args := createArgs()
+		args.SCChangeValidatorsAddress = ""
+
+		ts, err := NewTxSender(args)
+		require.Nil(t, ts)
+		require.Equal(t, errNoChangeValidatorSetSCAddress, err)
+	})
 	t.Run("should work", func(t *testing.T) {
 		args := createArgs()
 
 		ts, err := NewTxSender(args)
 		require.Nil(t, err)
 		require.False(t, ts.IsInterfaceNil())
+		require.Equal(t, map[string]*txConfig{
+			registerBridgeOpsPrefix:  {receiver: args.SCHeaderVerifierAddress},
+			executeBridgeOpsPrefix:   {receiver: args.SCEsdtSafeAddress},
+			changeValidatorSetPrefix: {receiver: args.SCChangeValidatorsAddress},
+		}, ts.txConfigs)
 	})
 }
 
@@ -84,9 +123,11 @@ func TestTxSender_SendTxs(t *testing.T) {
 	expectedDataIdx := 0
 	expectedTxHashes := []string{"txHash1", "txHash2", "txHash3"}
 	expectedTxsData := [][]byte{
-		[]byte(registerBridgeOpsPrefix + "txData1"),
-		[]byte(executeBridgeOpsPrefix + "txData2"),
-		[]byte(executeBridgeOpsPrefix + "txData3"),
+		[]byte(registerBridgeOpsPrefix + "@" + "txData1"),
+		[]byte(executeBridgeOpsPrefix + "@" + "txData2"),
+		[]byte(executeBridgeOpsPrefix + "@" + "txData3"),
+		[]byte("invalidPrefix" + "@" + "txData1"), // should skip it
+		[]byte("invalidPrefix"),                   // should skip it
 	}
 	expectedTxsReceiver := []string{
 		scHeaderVerifierAddress,
@@ -192,7 +233,7 @@ func TestTxSender_SendTxsConcurrently(t *testing.T) {
 
 	args.DataFormatter = &testscommon.DataFormatterMock{
 		CreateTxsDataCalled: func(data *sovereign.BridgeOperations) [][]byte {
-			return [][]byte{[]byte(executeBridgeOpsPrefix + "txData")}
+			return [][]byte{[]byte(executeBridgeOpsPrefix + "@" + "txData")}
 		},
 	}
 	args.TxNonceHandler = &testscommon.TxNonceSenderHandlerMock{

@@ -6,8 +6,9 @@ import (
 
 	"github.com/multiversx/mx-chain-core-go/core"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
-	"github.com/multiversx/mx-chain-sovereign-bridge-go/testscommon"
 	"github.com/stretchr/testify/require"
+
+	"github.com/multiversx/mx-chain-sovereign-bridge-go/testscommon"
 )
 
 func TestNewDataFormatter(t *testing.T) {
@@ -57,6 +58,9 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 		bridgeDataOp2 := []byte("bridgeDataOp2")
 		bridgeDataOp3 := []byte("bridgeDataOp3")
 
+		pubKeysBitmap1 := []byte("pubKeysBitmap1")
+		pubKeysBitmap2 := []byte("pubKeysBitmap2")
+
 		bridgeOps := &sovereign.BridgeOperations{
 			Data: []*sovereign.BridgeOutGoingData{
 				{
@@ -73,6 +77,8 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 					},
 					AggregatedSignature: aggregatedSig1,
 					LeaderSignature:     leaderSig1,
+					PubKeysBitmap:       pubKeysBitmap1,
+					Epoch:               1,
 				},
 				{
 					Hash: bridgeDataHash2,
@@ -84,6 +90,8 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 					},
 					AggregatedSignature: aggregatedSig2,
 					LeaderSignature:     leaderSig2,
+					PubKeysBitmap:       pubKeysBitmap2,
+					Epoch:               2,
 				},
 			},
 		}
@@ -115,6 +123,8 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 			registerBridgeOpsPrefix +
 				"@" + hex.EncodeToString(aggregatedSig1) +
 				"@" + hex.EncodeToString(bridgeDataHash1) +
+				"@" + hex.EncodeToString(pubKeysBitmap1) +
+				"@" + "00000001" +
 				"@" + hex.EncodeToString(opHash1) +
 				"@" + hex.EncodeToString(opHash2))
 		execOp1 := []byte(executeBridgeOpsPrefix +
@@ -128,6 +138,8 @@ func TestDataFormatter_CreateTxsData(t *testing.T) {
 			registerBridgeOpsPrefix +
 				"@" + hex.EncodeToString(aggregatedSig2) +
 				"@" + hex.EncodeToString(bridgeDataHash2) +
+				"@" + hex.EncodeToString(pubKeysBitmap2) +
+				"@" + "00000002" +
 				"@" + hex.EncodeToString(opHash3))
 		execOp3 := []byte(executeBridgeOpsPrefix +
 			"@" + hex.EncodeToString(bridgeDataHash2) +
