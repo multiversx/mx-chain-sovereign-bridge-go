@@ -37,16 +37,17 @@ const (
 )
 
 const (
-	envGRPCPort             = "GRPC_PORT"
-	envWallet               = "WALLET_PATH"
-	envPassword             = "WALLET_PASSWORD"
-	envHeaderVerifierSCAddr = "HEADER_VERIFIER_SC_ADDRESS"
-	envEsdtSafeSCAddr       = "ESDT_SAFE_SC_ADDRESS"
-	envMultiversXProxy      = "MULTIVERSX_PROXY"
-	envIntervalToSend       = "INTERVAL_TO_SEND"
-	envCertFile             = "CERT_FILE"
-	envCertPkFile           = "CERT_PK_FILE"
-	envHasher               = "HASHER"
+	envGRPCPort               = "GRPC_PORT"
+	envWallet                 = "WALLET_PATH"
+	envPassword               = "WALLET_PASSWORD"
+	envHeaderVerifierSCAddr   = "HEADER_VERIFIER_SC_ADDRESS"
+	envEsdtSafeSCAddr         = "ESDT_SAFE_SC_ADDRESS"
+	envChangeValidatorsSCAddr = "CHANGE_VALIDATORS_SC_ADDRESS"
+	envMultiversXProxy        = "MULTIVERSX_PROXY"
+	envIntervalToSend         = "INTERVAL_TO_SEND"
+	envCertFile               = "CERT_FILE"
+	envCertPkFile             = "CERT_PK_FILE"
+	envHasher                 = "HASHER"
 )
 
 func main() {
@@ -144,6 +145,8 @@ func loadConfig() (*config.ServerConfig, error) {
 	walletPassword := os.Getenv(envPassword)
 	headerVerifierSCAddress := os.Getenv(envHeaderVerifierSCAddr)
 	esdtSafeSCAddress := os.Getenv(envEsdtSafeSCAddr)
+	changeValidatorsSCAddress := os.Getenv(envChangeValidatorsSCAddr)
+
 	proxy := os.Getenv(envMultiversXProxy)
 	intervalToSendStr := os.Getenv(envIntervalToSend)
 	certFile := os.Getenv(envCertFile)
@@ -158,6 +161,7 @@ func loadConfig() (*config.ServerConfig, error) {
 	log.Info("loaded config", "grpc port", grpcPort)
 	log.Info("loaded config", "headerVerifierSCAddress", headerVerifierSCAddress)
 	log.Info("loaded config", "esdtSafeSCAddress", esdtSafeSCAddress)
+	log.Info("loaded config", "changeValidatorsSCAddress", changeValidatorsSCAddress)
 	log.Info("loaded config", "proxy", proxy)
 	log.Info("loaded config", "intervalToSend", intervalToSend)
 	log.Info("loaded config", "hasher", hasher)
@@ -172,11 +176,12 @@ func loadConfig() (*config.ServerConfig, error) {
 			Password: walletPassword,
 		},
 		TxSenderConfig: txSender.TxSenderConfig{
-			HeaderVerifierSCAddress: headerVerifierSCAddress,
-			EsdtSafeSCAddress:       esdtSafeSCAddress,
-			Proxy:                   proxy,
-			IntervalToSend:          intervalToSend,
-			Hasher:                  hasher,
+			HeaderVerifierSCAddress:   headerVerifierSCAddress,
+			EsdtSafeSCAddress:         esdtSafeSCAddress,
+			ChangeValidatorsSCAddress: changeValidatorsSCAddress,
+			Proxy:                     proxy,
+			IntervalToSend:            intervalToSend,
+			Hasher:                    hasher,
 		},
 		CertificateConfig: cert.FileCfg{
 			CertFile: certFile,
