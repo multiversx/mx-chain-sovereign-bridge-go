@@ -5,6 +5,7 @@ go 1.20
 replace (
 	github.com/multiversx/mx-chain-core-go => github.com/multiversx/mx-chain-core-sovereign-go v1.2.25-0.20250410112225-9b4402144b11
 	github.com/multiversx/mx-chain-go => github.com/multiversx/mx-chain-sovereign-go v1.8.12-0.20250410144934-a52862ec607a
+	github.com/multiversx/mx-chain-vm-common-go => github.com/multiversx/mx-chain-vm-common-sovereign-go v1.5.17-0.20250410143856-c8c2b5eeaa7c
 )
 
 require (
@@ -15,7 +16,7 @@ require (
 	github.com/multiversx/mx-chain-crypto-go v1.2.13-0.20250410124744-d21d37be8e32
 	github.com/multiversx/mx-chain-go v1.7.12-0.20240906130631-c565605bfd25
 	github.com/multiversx/mx-chain-logger-go v1.0.15
-	github.com/multiversx/mx-sdk-go v1.4.7-0.20250410145633-dd8659d5fe1f
+	github.com/multiversx/mx-sdk-go v1.4.7-0.20250410153217-ff4523e62985
 	github.com/stretchr/testify v1.10.0
 	github.com/urfave/cli v1.22.16
 	google.golang.org/grpc v1.60.1
