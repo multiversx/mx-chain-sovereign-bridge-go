@@ -34,3 +34,7 @@ type TxNonceSenderHandler interface {
 	SendTransactions(ctx context.Context, txs ...*transaction.FrontendTransaction) ([]string, error)
 	IsInterfaceNil() bool
 }
+
+type txDataFormatter interface {
+	createTxsData(bridgeData *sovereign.BridgeOutGoingData) ([][]byte, error)
+}

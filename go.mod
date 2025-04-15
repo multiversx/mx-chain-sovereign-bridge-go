@@ -6,7 +6,7 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/gorilla/websocket v1.5.0
 	github.com/joho/godotenv v1.5.1
-	github.com/multiversx/mx-chain-core-go v1.2.23-0.20241007113300-50ac1ae23824
+	github.com/multiversx/mx-chain-core-go v1.2.25-0.20250219094226-05f41be8a964
 	github.com/multiversx/mx-chain-crypto-go v1.2.11
 	github.com/multiversx/mx-chain-go v1.7.12
 	github.com/multiversx/mx-chain-logger-go v1.0.14
