@@ -1,6 +1,8 @@
 module github.com/multiversx/mx-chain-sovereign-bridge-go
 
-go 1.20
+replace github.com/multiversx/mx-chain-core-go => github.com/multiversx/mx-chain-core-sovereign-go v1.2.25-0.20250521134217-b57dab2b6db5
+
+go 1.23.0
 
 require (
 	github.com/gin-gonic/gin v1.9.1
@@ -14,6 +16,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli v1.22.14
 	google.golang.org/grpc v1.60.1
+	google.golang.org/protobuf v1.31.0
 )
 
 require (
@@ -66,6 +69,5 @@ require (
 	golang.org/x/sys v0.19.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231002182017-d307bd883b97 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
