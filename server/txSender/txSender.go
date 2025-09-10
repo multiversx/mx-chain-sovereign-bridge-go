@@ -22,6 +22,7 @@ type TxSenderArgs struct {
 	SCHeaderVerifierAddress   string
 	SCEsdtSafeAddress         string
 	SCChangeValidatorsAddress string
+	SCChainConfigAddress      string
 }
 
 type txConfig struct {
@@ -56,9 +57,15 @@ func NewTxSender(args TxSenderArgs) (*txSender, error) {
 		txNonceHandler: args.TxNonceHandler,
 		dataFormatter:  args.DataFormatter,
 		txConfigs: map[string]*txConfig{
-			registerBridgeOpsPrefix:       {receiver: args.SCHeaderVerifierAddress},
+			registerBridgeOpsPrefix: {receiver: args.SCHeaderVerifierAddress},
+
 			executeDepositBridgeOpsPrefix: {receiver: args.SCEsdtSafeAddress},
-			changeValidatorSetPrefix:      {receiver: args.SCChangeValidatorsAddress},
+			executeRegisterTokenPrefix:    {receiver: args.SCEsdtSafeAddress},
+
+			changeValidatorSetPrefix: {receiver: args.SCChangeValidatorsAddress},
+
+			executeRegisterValidatorPrefix:   {receiver: args.SCChainConfigAddress},
+			executeUnRegisterValidatorPrefix: {receiver: args.SCChainConfigAddress},
 		},
 	}, nil
 }
@@ -87,6 +94,9 @@ func checkArgs(args TxSenderArgs) error {
 	}
 	if len(args.SCChangeValidatorsAddress) == 0 {
 		return errNoChangeValidatorSetSCAddress
+	}
+	if len(args.SCChainConfigAddress) == 0 {
+		return errNoChainConfigSCAddress
 	}
 
 	return nil
