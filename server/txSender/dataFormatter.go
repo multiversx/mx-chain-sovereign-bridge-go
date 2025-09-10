@@ -20,8 +20,23 @@ func NewDataFormatter(hasher hashing.Hasher) (*dataFormatter, error) {
 
 	return &dataFormatter{
 		dataFormatterHandlers: map[int32]txDataFormatter{
-			int32(block.OutGoingMbTx):                 &dataFormatterDepositTokens{hasher: hasher},
 			int32(block.OutGoingMbChangeValidatorSet): &dataFormatterValidatorSetChange{},
+			int32(block.OutGoingMbDeposit): &dataFormatterExecuteOperation{
+				hasher:                                hasher,
+				createExecuteBridgeOperationsDataFunc: createExecuteDepositTokensBridgeOperationsData,
+			},
+			int32(block.OutGoingMBRegisterToken): &dataFormatterExecuteOperation{
+				hasher:                                hasher,
+				createExecuteBridgeOperationsDataFunc: createExecuteDepositTokensBridgeOperationsData,
+			},
+			int32(block.OutGoingMBRegisterBlsKey): &dataFormatterExecuteOperation{
+				hasher:                                hasher,
+				createExecuteBridgeOperationsDataFunc: createExecuteDepositTokensBridgeOperationsData,
+			},
+			int32(block.OutGoingMBUnRegisterBlsKey): &dataFormatterExecuteOperation{
+				hasher:                                hasher,
+				createExecuteBridgeOperationsDataFunc: createExecuteDepositTokensBridgeOperationsData,
+			},
 		},
 	}, nil
 }
