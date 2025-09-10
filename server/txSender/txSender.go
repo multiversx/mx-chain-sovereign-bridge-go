@@ -56,9 +56,9 @@ func NewTxSender(args TxSenderArgs) (*txSender, error) {
 		txNonceHandler: args.TxNonceHandler,
 		dataFormatter:  args.DataFormatter,
 		txConfigs: map[string]*txConfig{
-			registerBridgeOpsPrefix:  {receiver: args.SCHeaderVerifierAddress},
-			executeBridgeOpsPrefix:   {receiver: args.SCEsdtSafeAddress},
-			changeValidatorSetPrefix: {receiver: args.SCChangeValidatorsAddress},
+			registerBridgeOpsPrefix:       {receiver: args.SCHeaderVerifierAddress},
+			executeDepositBridgeOpsPrefix: {receiver: args.SCEsdtSafeAddress},
+			changeValidatorSetPrefix:      {receiver: args.SCChangeValidatorsAddress},
 		},
 	}, nil
 }

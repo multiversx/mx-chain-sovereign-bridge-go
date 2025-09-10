@@ -9,16 +9,18 @@ import (
 	"github.com/multiversx/mx-chain-core-go/hashing"
 )
 
+const registerBridgeOpsPrefix = "registerBridgeOps"
+
 const (
-	registerBridgeOpsPrefix = "registerBridgeOps"
-	executeBridgeOpsPrefix  = "executeBridgeOps"
+	executeDepositBridgeOpsPrefix    = "executeBridgeOps"
+	executeRegisterTokenPrefix       = "registerToken"
+	executeRegisterValidatorPrefix   = "registerValidator"
+	executeUnRegisterValidatorPrefix = "unRegisterValidator"
 )
 
-type createExecuteBridgeOperationsDataHandler func(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) [][]byte
-
 type dataFormatterExecuteOperation struct {
-	hasher                                hashing.Hasher
-	createExecuteBridgeOperationsDataFunc createExecuteBridgeOperationsDataHandler
+	hasher          hashing.Hasher
+	executeOpPrefix string
 }
 
 func (df *dataFormatterExecuteOperation) createTxsData(bridgeData *sovereign.BridgeOutGoingData) ([][]byte, error) {
@@ -28,7 +30,7 @@ func (df *dataFormatterExecuteOperation) createTxsData(bridgeData *sovereign.Bri
 		txsData = append(txsData, registerBridgeOpData)
 	}
 
-	return append(txsData, df.createExecuteBridgeOperationsDataFunc(bridgeData.Hash, bridgeData.OutGoingOperations)...), nil
+	return append(txsData, df.createExecuteDepositTokensBridgeOperationsData(bridgeData.Hash, bridgeData.OutGoingOperations)...), nil
 }
 
 func (df *dataFormatterExecuteOperation) createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData) []byte {
@@ -58,4 +60,18 @@ func uint32ToBytes(value uint32) []byte {
 	buff := make([]byte, 4)
 	binary.BigEndian.PutUint32(buff, value)
 	return buff
+}
+
+func (df *dataFormatterExecuteOperation) createExecuteDepositTokensBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
+	executeBridgeOpsTxData := make([][]byte, 0)
+	for _, operation := range outGoingOperations {
+		bridgeOpTxData := []byte(
+			df.executeOpPrefix +
+				"@" + hex.EncodeToString(hashOfHashes) +
+				"@" + hex.EncodeToString(operation.Data))
+
+		executeBridgeOpsTxData = append(executeBridgeOpsTxData, bridgeOpTxData)
+	}
+
+	return executeBridgeOpsTxData
 }

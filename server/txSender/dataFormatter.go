@@ -22,20 +22,20 @@ func NewDataFormatter(hasher hashing.Hasher) (*dataFormatter, error) {
 		dataFormatterHandlers: map[int32]txDataFormatter{
 			int32(block.OutGoingMbChangeValidatorSet): &dataFormatterValidatorSetChange{},
 			int32(block.OutGoingMbDeposit): &dataFormatterExecuteOperation{
-				hasher:                                hasher,
-				createExecuteBridgeOperationsDataFunc: createExecuteDepositTokensBridgeOperationsData,
+				hasher:          hasher,
+				executeOpPrefix: executeDepositBridgeOpsPrefix,
 			},
 			int32(block.OutGoingMBRegisterToken): &dataFormatterExecuteOperation{
-				hasher:                                hasher,
-				createExecuteBridgeOperationsDataFunc: createExecuteDepositTokensBridgeOperationsData,
+				hasher:          hasher,
+				executeOpPrefix: executeRegisterTokenPrefix,
 			},
 			int32(block.OutGoingMBRegisterBlsKey): &dataFormatterExecuteOperation{
-				hasher:                                hasher,
-				createExecuteBridgeOperationsDataFunc: createExecuteDepositTokensBridgeOperationsData,
+				hasher:          hasher,
+				executeOpPrefix: executeRegisterValidatorPrefix,
 			},
 			int32(block.OutGoingMBUnRegisterBlsKey): &dataFormatterExecuteOperation{
-				hasher:                                hasher,
-				createExecuteBridgeOperationsDataFunc: createExecuteDepositTokensBridgeOperationsData,
+				hasher:          hasher,
+				executeOpPrefix: executeUnRegisterValidatorPrefix,
 			},
 		},
 	}, nil
