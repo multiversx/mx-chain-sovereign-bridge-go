@@ -118,12 +118,12 @@ func TestNewTxSender(t *testing.T) {
 		require.Nil(t, err)
 		require.False(t, ts.IsInterfaceNil())
 		require.Equal(t, map[string]*txConfig{
-			registerBridgeOpsPrefix:          {receiver: args.SCHeaderVerifierAddress},
-			executeDepositBridgeOpsPrefix:    {receiver: args.SCEsdtSafeAddress},
-			changeValidatorSetPrefix:         {receiver: args.SCChangeValidatorsAddress},
-			executeRegisterValidatorPrefix:   {receiver: args.SCChainConfigAddress},
-			executeUnRegisterValidatorPrefix: {receiver: args.SCChainConfigAddress},
-			executeRegisterTokenPrefix:       {receiver: args.SCEsdtSafeAddress},
+			registerBridgeOpsPrefix:          {receiver: args.SCHeaderVerifierAddress, gasLimit: gasLimitDefault},
+			executeDepositBridgeOpsPrefix:    {receiver: args.SCEsdtSafeAddress, gasLimit: gasLimitDefault},
+			changeValidatorSetPrefix:         {receiver: args.SCChangeValidatorsAddress, gasLimit: gasLimitDefault},
+			executeRegisterValidatorPrefix:   {receiver: args.SCChainConfigAddress, gasLimit: gasLimitDefault},
+			executeUnRegisterValidatorPrefix: {receiver: args.SCChainConfigAddress, gasLimit: gasLimitDefault},
+			executeRegisterTokenPrefix:       {receiver: args.SCEsdtSafeAddress, gasLimit: gasLimitRegisterToken},
 		}, ts.txConfigs)
 	})
 }
