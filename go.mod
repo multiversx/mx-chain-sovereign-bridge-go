@@ -1,6 +1,6 @@
 module github.com/multiversx/mx-chain-sovereign-bridge-go
 
-replace github.com/multiversx/mx-chain-core-go => github.com/multiversx/mx-chain-core-sovereign-go v1.2.25-0.20250715130233-f0b1f811a63c
+replace github.com/multiversx/mx-chain-core-go => github.com/multiversx/mx-chain-core-sovereign-go v1.2.25-0.20250916112643-69a2ef248cf5
 
 go 1.23.0
 
@@ -11,7 +11,7 @@ require (
 	github.com/multiversx/mx-chain-core-go v1.2.25-0.20250219094226-05f41be8a964
 	github.com/multiversx/mx-chain-crypto-go v1.2.11
 	github.com/multiversx/mx-chain-go v1.7.12
-	github.com/multiversx/mx-chain-logger-go v1.0.14
+	github.com/multiversx/mx-chain-logger-go v1.0.15
 	github.com/multiversx/mx-sdk-go v1.4.4-0.20241105143052-f5830f5b9079
 	github.com/stretchr/testify v1.8.4
 	github.com/urfave/cli v1.22.14

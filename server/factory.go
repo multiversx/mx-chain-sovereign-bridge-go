@@ -2,6 +2,7 @@ package server
 
 import (
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
+	"github.com/multiversx/mx-chain-core-go/data/sovereign/dto"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/cmd/config"
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/server/txSender"
 )
@@ -18,5 +19,9 @@ func CreateSovereignBridgeServer(cfg *config.ServerConfig) (sovereign.BridgeTxSe
 		return nil, err
 	}
 
-	return NewSovereignBridgeTxServer(txSnd)
+	txSenders := map[dto.ChainID]TxSender{
+		dto.MVX: txSnd,
+	}
+
+	return NewSovereignBridgeTxServer(txSenders)
 }

@@ -5,10 +5,18 @@ import (
 	"testing"
 
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
+	"github.com/multiversx/mx-chain-core-go/data/sovereign/dto"
 	"github.com/stretchr/testify/require"
 
 	"github.com/multiversx/mx-chain-sovereign-bridge-go/testscommon"
 )
+
+func createTxSenders() map[dto.ChainID]TxSender {
+	return map[dto.ChainID]TxSender{
+		dto.MVX: &testscommon.TxSenderMock{},
+		dto.ETH: &testscommon.TxSenderMock{},
+	}
+}
 
 func TestNewSovereignBridgeTxServer(t *testing.T) {
 	t.Parallel()
@@ -19,7 +27,7 @@ func TestNewSovereignBridgeTxServer(t *testing.T) {
 		require.Nil(t, bridgeServer)
 	})
 	t.Run("should work", func(t *testing.T) {
-		bridgeServer, err := NewSovereignBridgeTxServer(&testscommon.TxSenderMock{})
+		bridgeServer, err := NewSovereignBridgeTxServer(createTxSenders())
 		require.Nil(t, err)
 		require.False(t, bridgeServer.IsInterfaceNil())
 	})
@@ -32,7 +40,8 @@ func TestServer_Send(t *testing.T) {
 	expectedBridgeOps := &sovereign.BridgeOperations{
 		Data: []*sovereign.BridgeOutGoingData{
 			{
-				Hash: []byte("hash"),
+				ChainID: int32(dto.MVX),
+				Hash:    []byte("hash"),
 			},
 		},
 	}
@@ -43,7 +52,10 @@ func TestServer_Send(t *testing.T) {
 		},
 	}
 
-	bridgeServer, _ := NewSovereignBridgeTxServer(txSender)
+	txsSenders := createTxSenders()
+	txsSenders[dto.MVX] = txSender
+
+	bridgeServer, _ := NewSovereignBridgeTxServer(txsSenders)
 	res, err := bridgeServer.Send(context.Background(), expectedBridgeOps)
 	require.Nil(t, err)
 	require.Equal(t, &sovereign.BridgeOperationsResponse{
