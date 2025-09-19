@@ -102,7 +102,7 @@ func TestServerRequestsHandler_ServeHTTP(t *testing.T) {
 			},
 		)
 		dialOptCredentials := grpc.WithTransportCredentials(insecure.NewCredentials())
-		clientConn, err := grpc.DialContext(ctx, "bufnet", dialOptWithCtx, dialOptCredentials)
+		clientConn, err := grpc.NewClient("passthrough:///bufnet", dialOptWithCtx, dialOptCredentials)
 		if err != nil {
 			require.Fail(t, "client failed to dial", "error", err)
 		}
