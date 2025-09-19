@@ -3,6 +3,8 @@ package server
 import (
 	"context"
 	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/multiversx/mx-chain-core-go/core/check"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
@@ -37,18 +39,7 @@ func NewSovereignBridgeTxServer(txSenders map[dto.ChainID]TxSender) (*server, er
 
 // Send should handle receiving data bridge operations from sovereign shard and forward transactions to main chain
 func (s *server) Send(ctx context.Context, data *sovereign.BridgeOperations) (*sovereign.BridgeOperationsResponse, error) {
-	dataToSendPerChain := make(map[dto.ChainID]*sovereign.BridgeOperations)
-	for _, dta := range data.Data {
-		chainID := dto.ChainID(dta.ChainID)
-
-		if ops, ok := dataToSendPerChain[chainID]; ok {
-			ops.Data = append(ops.Data, dta)
-		} else {
-			dataToSendPerChain[chainID] = &sovereign.BridgeOperations{
-				Data: []*sovereign.BridgeOutGoingData{dta},
-			}
-		}
-	}
+	dataToSendPerChain := getDataToSendPerChain(data)
 
 	allHashes := make([]string, 0)
 	for chainID, dataToSend := range dataToSendPerChain {
@@ -68,9 +59,30 @@ func (s *server) Send(ctx context.Context, data *sovereign.BridgeOperations) (*s
 		allHashes = append(allHashes, hashes...)
 	}
 
+	slices.SortStableFunc(allHashes, func(a, b string) int {
+		return strings.Compare(a, b)
+	})
+
 	return &sovereign.BridgeOperationsResponse{
 		TxHashes: allHashes,
 	}, nil
+}
+
+func getDataToSendPerChain(data *sovereign.BridgeOperations) map[dto.ChainID]*sovereign.BridgeOperations {
+	dataToSendPerChain := make(map[dto.ChainID]*sovereign.BridgeOperations)
+	for _, dta := range data.Data {
+		chainID := dto.ChainID(dta.ChainID)
+
+		if ops, ok := dataToSendPerChain[chainID]; ok {
+			ops.Data = append(ops.Data, dta)
+		} else {
+			dataToSendPerChain[chainID] = &sovereign.BridgeOperations{
+				Data: []*sovereign.BridgeOutGoingData{dta},
+			}
+		}
+	}
+
+	return dataToSendPerChain
 }
 
 func logTxHashes(chainID dto.ChainID, hashes []string) {
