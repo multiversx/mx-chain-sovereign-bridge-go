@@ -19,6 +19,7 @@ const (
 	scHeaderVerifierAddress      = "erd1qqq"
 	scEsdtSafeAddress            = "erd1qqqe"
 	scChangeValidatorsSetAddress = "erd1qqqw"
+	scChainConfigAddress         = "erd1qqqb"
 )
 
 func createArgs() TxSenderArgs {
@@ -31,6 +32,7 @@ func createArgs() TxSenderArgs {
 		SCHeaderVerifierAddress:   scHeaderVerifierAddress,
 		SCEsdtSafeAddress:         scEsdtSafeAddress,
 		SCChangeValidatorsAddress: scChangeValidatorsSetAddress,
+		SCChainConfigAddress:      scChainConfigAddress,
 	}
 }
 
@@ -101,6 +103,14 @@ func TestNewTxSender(t *testing.T) {
 		require.Nil(t, ts)
 		require.Equal(t, errNoChangeValidatorSetSCAddress, err)
 	})
+	t.Run("empty chain config address", func(t *testing.T) {
+		args := createArgs()
+		args.SCChainConfigAddress = ""
+
+		ts, err := NewTxSender(args)
+		require.Nil(t, ts)
+		require.Equal(t, errNoChainConfigSCAddress, err)
+	})
 	t.Run("should work", func(t *testing.T) {
 		args := createArgs()
 
@@ -108,9 +118,12 @@ func TestNewTxSender(t *testing.T) {
 		require.Nil(t, err)
 		require.False(t, ts.IsInterfaceNil())
 		require.Equal(t, map[string]*txConfig{
-			registerBridgeOpsPrefix:  {receiver: args.SCHeaderVerifierAddress},
-			executeBridgeOpsPrefix:   {receiver: args.SCEsdtSafeAddress},
-			changeValidatorSetPrefix: {receiver: args.SCChangeValidatorsAddress},
+			registerBridgeOpsPrefix:          {receiver: args.SCHeaderVerifierAddress, gasLimit: gasLimitDefault},
+			executeDepositBridgeOpsPrefix:    {receiver: args.SCEsdtSafeAddress, gasLimit: gasLimitDefault},
+			changeValidatorSetPrefix:         {receiver: args.SCChangeValidatorsAddress, gasLimit: gasLimitDefault},
+			executeRegisterValidatorPrefix:   {receiver: args.SCChainConfigAddress, gasLimit: gasLimitDefault},
+			executeUnRegisterValidatorPrefix: {receiver: args.SCChainConfigAddress, gasLimit: gasLimitDefault},
+			executeRegisterTokenPrefix:       {receiver: args.SCEsdtSafeAddress, gasLimit: gasLimitRegisterToken},
 		}, ts.txConfigs)
 	})
 }
@@ -124,8 +137,8 @@ func TestTxSender_SendTxs(t *testing.T) {
 	expectedTxHashes := []string{"txHash1", "txHash2", "txHash3"}
 	expectedTxsData := [][]byte{
 		[]byte(registerBridgeOpsPrefix + "@" + "txData1"),
-		[]byte(executeBridgeOpsPrefix + "@" + "txData2"),
-		[]byte(executeBridgeOpsPrefix + "@" + "txData3"),
+		[]byte(executeDepositBridgeOpsPrefix + "@" + "txData2"),
+		[]byte(executeDepositBridgeOpsPrefix + "@" + "txData3"),
 		[]byte("invalidPrefix" + "@" + "txData1"), // should skip it
 		[]byte("invalidPrefix"),                   // should skip it
 	}
@@ -233,7 +246,7 @@ func TestTxSender_SendTxsConcurrently(t *testing.T) {
 
 	args.DataFormatter = &testscommon.DataFormatterMock{
 		CreateTxsDataCalled: func(data *sovereign.BridgeOperations) [][]byte {
-			return [][]byte{[]byte(executeBridgeOpsPrefix + "@" + "txData")}
+			return [][]byte{[]byte(executeDepositBridgeOpsPrefix + "@" + "txData")}
 		},
 	}
 	args.TxNonceHandler = &testscommon.TxNonceSenderHandlerMock{
