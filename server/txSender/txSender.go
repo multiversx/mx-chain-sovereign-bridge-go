@@ -12,6 +12,11 @@ import (
 	"github.com/multiversx/mx-sdk-go/data"
 )
 
+const (
+	gasLimitDefault       = 50_000_000
+	gasLimitRegisterToken = 80_000_000
+)
+
 // TxSenderArgs holds args to create a new tx sender
 type TxSenderArgs struct {
 	Wallet                    core.CryptoComponentsHolder
@@ -22,10 +27,12 @@ type TxSenderArgs struct {
 	SCHeaderVerifierAddress   string
 	SCEsdtSafeAddress         string
 	SCChangeValidatorsAddress string
+	SCChainConfigAddress      string
 }
 
 type txConfig struct {
 	receiver string
+	gasLimit uint64
 }
 
 type txSender struct {
@@ -56,9 +63,33 @@ func NewTxSender(args TxSenderArgs) (*txSender, error) {
 		txNonceHandler: args.TxNonceHandler,
 		dataFormatter:  args.DataFormatter,
 		txConfigs: map[string]*txConfig{
-			registerBridgeOpsPrefix:  {receiver: args.SCHeaderVerifierAddress},
-			executeBridgeOpsPrefix:   {receiver: args.SCEsdtSafeAddress},
-			changeValidatorSetPrefix: {receiver: args.SCChangeValidatorsAddress},
+			registerBridgeOpsPrefix: {
+				receiver: args.SCHeaderVerifierAddress,
+				gasLimit: gasLimitDefault,
+			},
+
+			executeDepositBridgeOpsPrefix: {
+				receiver: args.SCEsdtSafeAddress,
+				gasLimit: gasLimitDefault,
+			},
+			executeRegisterTokenPrefix: {
+				receiver: args.SCEsdtSafeAddress,
+				gasLimit: gasLimitRegisterToken,
+			},
+
+			changeValidatorSetPrefix: {
+				receiver: args.SCChangeValidatorsAddress,
+				gasLimit: gasLimitDefault,
+			},
+
+			executeRegisterValidatorPrefix: {
+				receiver: args.SCChainConfigAddress,
+				gasLimit: gasLimitDefault,
+			},
+			executeUnRegisterValidatorPrefix: {
+				receiver: args.SCChainConfigAddress,
+				gasLimit: gasLimitDefault,
+			},
 		},
 	}, nil
 }
@@ -88,6 +119,9 @@ func checkArgs(args TxSenderArgs) error {
 	if len(args.SCChangeValidatorsAddress) == 0 {
 		return errNoChangeValidatorSetSCAddress
 	}
+	if len(args.SCChainConfigAddress) == 0 {
+		return errNoChainConfigSCAddress
+	}
 
 	return nil
 }
@@ -110,7 +144,7 @@ func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.Bridge
 			Value:    "0",
 			Sender:   ts.wallet.GetBech32(),
 			GasPrice: ts.netConfigs.MinGasPrice,
-			GasLimit: 50_000_000, // todo
+			GasLimit: gasLimitDefault, // todo: we need proper gas estimation in the future
 			Data:     txData,
 			ChainID:  ts.netConfigs.ChainID,
 			Version:  ts.netConfigs.MinTransactionVersion,
@@ -152,6 +186,7 @@ func (ts *txSender) setTxFields(txData []byte, tx *coreTx.FrontendTransaction) e
 	}
 
 	tx.Receiver = txCfg.receiver
+	tx.GasLimit = txCfg.gasLimit
 	return nil
 }
 
