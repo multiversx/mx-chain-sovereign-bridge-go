@@ -8,6 +8,7 @@ import (
 
 	"github.com/joho/godotenv"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
+	"github.com/multiversx/mx-chain-core-go/data/sovereign/dto"
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/urfave/cli"
 
@@ -83,7 +84,8 @@ func sendData(bridgeClient client.ClientHandler) error {
 			res, errSend := bridgeClient.Send(context.Background(), &sovereign.BridgeOperations{
 				Data: []*sovereign.BridgeOutGoingData{
 					{
-						Hash: hash,
+						ChainID: int32(dto.MVX),
+						Hash:    hash,
 						OutGoingOperations: []*sovereign.OutGoingOperation{
 							{
 								Hash: []byte("opHash1"),

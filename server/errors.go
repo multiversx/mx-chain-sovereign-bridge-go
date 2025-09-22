@@ -2,6 +2,8 @@ package server
 
 import "errors"
 
+var errNilTxSenders = errors.New("nil tx senders provided")
+
 var errNilTxSender = errors.New("nil tx sender provided")
 
 var errNilMarshaller = errors.New("nil marshaller provided")
