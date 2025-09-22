@@ -23,7 +23,7 @@ type server struct {
 // sovereign nodes and sends transactions to main chain.
 func NewSovereignBridgeTxServer(txSenders map[dto.ChainID]TxSender) (*server, error) {
 	if len(txSenders) == 0 {
-		return nil, errNilTxSender
+		return nil, errNilTxSenders
 	}
 
 	for chainID, txSender := range txSenders {
@@ -51,7 +51,8 @@ func (s *server) Send(ctx context.Context, data *sovereign.BridgeOperations) (*s
 
 		hashes, err := txSender.SendTxs(ctx, dataToSend)
 		if err != nil {
-			return nil, err
+			log.Error("could not send bridge txs", "chainID", chainID.String(), "err", err)
+			continue
 		}
 
 		logTxHashes(chainID, hashes)
