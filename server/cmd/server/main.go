@@ -43,6 +43,7 @@ const (
 	envHeaderVerifierSCAddr   = "HEADER_VERIFIER_SC_ADDRESS"
 	envEsdtSafeSCAddr         = "ESDT_SAFE_SC_ADDRESS"
 	envChangeValidatorsSCAddr = "CHANGE_VALIDATORS_SC_ADDRESS"
+	envChainConfigSCAddr      = "CHAIN_CONFIG_SC_ADDRESS"
 	envMultiversXProxy        = "MULTIVERSX_PROXY"
 	envIntervalToSend         = "INTERVAL_TO_SEND"
 	envCertFile               = "CERT_FILE"
@@ -146,6 +147,7 @@ func loadConfig() (*config.ServerConfig, error) {
 	headerVerifierSCAddress := os.Getenv(envHeaderVerifierSCAddr)
 	esdtSafeSCAddress := os.Getenv(envEsdtSafeSCAddr)
 	changeValidatorsSCAddress := os.Getenv(envChangeValidatorsSCAddr)
+	chainConfigSCAddress := os.Getenv(envChainConfigSCAddr)
 
 	proxy := os.Getenv(envMultiversXProxy)
 	intervalToSendStr := os.Getenv(envIntervalToSend)
@@ -162,6 +164,7 @@ func loadConfig() (*config.ServerConfig, error) {
 	log.Info("loaded config", "headerVerifierSCAddress", headerVerifierSCAddress)
 	log.Info("loaded config", "esdtSafeSCAddress", esdtSafeSCAddress)
 	log.Info("loaded config", "changeValidatorsSCAddress", changeValidatorsSCAddress)
+	log.Info("loaded config", "chainConfigSCAddress", chainConfigSCAddress)
 	log.Info("loaded config", "proxy", proxy)
 	log.Info("loaded config", "intervalToSend", intervalToSend)
 	log.Info("loaded config", "hasher", hasher)
@@ -179,6 +182,7 @@ func loadConfig() (*config.ServerConfig, error) {
 			HeaderVerifierSCAddress:   headerVerifierSCAddress,
 			EsdtSafeSCAddress:         esdtSafeSCAddress,
 			ChangeValidatorsSCAddress: changeValidatorsSCAddress,
+			ChainConfigSCAddress:      chainConfigSCAddress,
 			Proxy:                     proxy,
 			IntervalToSend:            intervalToSend,
 			Hasher:                    hasher,

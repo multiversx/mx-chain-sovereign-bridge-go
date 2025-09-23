@@ -9,26 +9,31 @@ import (
 	"github.com/multiversx/mx-chain-core-go/hashing"
 )
 
+const registerBridgeOpsPrefix = "registerBridgeOps"
+
 const (
-	registerBridgeOpsPrefix = "registerBridgeOps"
-	executeBridgeOpsPrefix  = "executeBridgeOps"
+	executeDepositBridgeOpsPrefix    = "executeBridgeOps"
+	executeRegisterTokenPrefix       = "registerToken"
+	executeRegisterValidatorPrefix   = "registerValidator"
+	executeUnRegisterValidatorPrefix = "unRegisterValidator"
 )
 
-type dataFormatterDepositTokens struct {
-	hasher hashing.Hasher
+type dataFormatterExecuteOperation struct {
+	hasher          hashing.Hasher
+	executeOpPrefix string
 }
 
-func (df *dataFormatterDepositTokens) createTxsData(bridgeData *sovereign.BridgeOutGoingData) ([][]byte, error) {
+func (df *dataFormatterExecuteOperation) createTxsData(bridgeData *sovereign.BridgeOutGoingData) ([][]byte, error) {
 	txsData := make([][]byte, 0)
 	registerBridgeOpData := df.createRegisterBridgeOperationsData(bridgeData)
 	if len(registerBridgeOpData) != 0 {
 		txsData = append(txsData, registerBridgeOpData)
 	}
 
-	return append(txsData, createExecuteBridgeOperationsData(bridgeData.Hash, bridgeData.OutGoingOperations)...), nil
+	return append(txsData, df.createExecuteDepositTokensBridgeOperationsData(bridgeData.Hash, bridgeData.OutGoingOperations)...), nil
 }
 
-func (df *dataFormatterDepositTokens) createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData) []byte {
+func (df *dataFormatterExecuteOperation) createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData) []byte {
 	hashes := make([]byte, 0)
 	hashesHexEncodedArgs := make([]byte, 0)
 	for _, operation := range bridgeData.OutGoingOperations {
@@ -57,11 +62,11 @@ func uint32ToBytes(value uint32) []byte {
 	return buff
 }
 
-func createExecuteBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
+func (df *dataFormatterExecuteOperation) createExecuteDepositTokensBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
 	executeBridgeOpsTxData := make([][]byte, 0)
 	for _, operation := range outGoingOperations {
 		bridgeOpTxData := []byte(
-			executeBridgeOpsPrefix +
+			df.executeOpPrefix +
 				"@" + hex.EncodeToString(hashOfHashes) +
 				"@" + hex.EncodeToString(operation.Data))
 
