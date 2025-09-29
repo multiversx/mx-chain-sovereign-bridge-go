@@ -11,6 +11,7 @@ type TxSenderConfig struct {
 	HeaderVerifierSCAddress   string
 	EsdtSafeSCAddress         string
 	ChangeValidatorsSCAddress string
+	ChainConfigSCAddress      string
 	Proxy                     string
 	IntervalToSend            int
 	Hasher                    string

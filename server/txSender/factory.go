@@ -63,6 +63,7 @@ func CreateTxSender(wallet core.CryptoComponentsHolder, cfg TxSenderConfig) (*tx
 		TxNonceHandler:            nonceHandler,
 		DataFormatter:             dtaFormatter,
 		SCHeaderVerifierAddress:   cfg.HeaderVerifierSCAddress,
+		SCChainConfigAddress:      cfg.ChainConfigSCAddress,
 		SCEsdtSafeAddress:         cfg.EsdtSafeSCAddress,
 		SCChangeValidatorsAddress: cfg.ChangeValidatorsSCAddress,
 	})
