@@ -6,7 +6,9 @@ import (
 	"os"
 	"sync"
 
+	"github.com/gogo/protobuf/proto"
 	"github.com/joho/godotenv"
+	"github.com/multiversx/mx-chain-core-go/data/block"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	logger "github.com/multiversx/mx-chain-logger-go"
 	"github.com/urfave/cli"
@@ -71,18 +73,28 @@ func sendData(bridgeClient client.ClientHandler) error {
 	mut := sync.RWMutex{}
 
 	numBridgeOps := 5
-	expectedNumBridgeTxs := 3 * numBridgeOps
+	expectedNumBridgeTxs := 2*numBridgeOps - 1
 	wg := sync.WaitGroup{}
 	wg.Add(expectedNumBridgeTxs)
+
+	bridgeOpTypes := []block.OutGoingMBType{
+		block.OutGoingMbDeposit,
+		block.OutGoingMBRegisterBlsKey,
+		block.OutGoingMBRegisterToken,
+		block.OutGoingMbChangeValidatorSet,
+		block.OutGoingMBUnRegisterBlsKey,
+	}
 
 	for i := 0; i < numBridgeOps; i++ {
 		hash := []byte(fmt.Sprintf("hash_%d", i))
 		log.Info("sending data", "hash", hash)
 
 		go func() {
-			res, errSend := bridgeClient.Send(context.Background(), &sovereign.BridgeOperations{
+			opType := bridgeOpTypes[i]
+			bridgeData := &sovereign.BridgeOperations{
 				Data: []*sovereign.BridgeOutGoingData{
 					{
+						Type: int32(opType),
 						Hash: hash,
 						OutGoingOperations: []*sovereign.OutGoingOperation{
 							{
@@ -98,7 +110,13 @@ func sendData(bridgeClient client.ClientHandler) error {
 						LeaderSignature:     []byte("leaderSig"),
 					},
 				},
-			})
+			}
+
+			if opType == block.OutGoingMbChangeValidatorSet {
+				bridgeData.Data[0].OutGoingOperations = createChangeValidatorSetData()
+			}
+
+			res, errSend := bridgeClient.Send(context.Background(), bridgeData)
 			if errSend != nil {
 				log.Error("error sending bridge data", "error", errSend)
 				wg.Done()
@@ -118,6 +136,20 @@ func sendData(bridgeClient client.ClientHandler) error {
 	}
 
 	return nil
+}
+
+func createChangeValidatorSetData() []*sovereign.OutGoingOperation {
+	validators := &sovereign.BridgeOutGoingDataValidatorSetChange{
+		PubKeyIDs: [][]byte{{0x1}, {0x3}},
+	}
+	validatorsData, _ := proto.Marshal(validators)
+
+	return []*sovereign.OutGoingOperation{
+		{
+			Hash: []byte("opHash1"),
+			Data: validatorsData,
+		},
+	}
 }
 
 func addTxHashes(txHashes []string, txHashesMap map[string]struct{}, mut *sync.RWMutex, wg *sync.WaitGroup) {

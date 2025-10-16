@@ -1,22 +1,15 @@
 package txSender
 
 import (
-	"bytes"
-	"encoding/hex"
-
 	"github.com/multiversx/mx-chain-core-go/core"
 	"github.com/multiversx/mx-chain-core-go/core/check"
+	"github.com/multiversx/mx-chain-core-go/data/block"
 	"github.com/multiversx/mx-chain-core-go/data/sovereign"
 	"github.com/multiversx/mx-chain-core-go/hashing"
 )
 
-const (
-	registerBridgeOpsPrefix = "registerBridgeOps"
-	executeBridgeOpsPrefix  = "executeBridgeOps"
-)
-
 type dataFormatter struct {
-	hasher hashing.Hasher
+	dataFormatterHandlers map[int32]txDataFormatter
 }
 
 // NewDataFormatter creates a sovereign bridge tx data formatter
@@ -26,7 +19,25 @@ func NewDataFormatter(hasher hashing.Hasher) (*dataFormatter, error) {
 	}
 
 	return &dataFormatter{
-		hasher: hasher,
+		dataFormatterHandlers: map[int32]txDataFormatter{
+			int32(block.OutGoingMbChangeValidatorSet): &dataFormatterValidatorSetChange{},
+			int32(block.OutGoingMbDeposit): &dataFormatterExecuteOperation{
+				hasher:          hasher,
+				executeOpPrefix: executeDepositBridgeOpsPrefix,
+			},
+			int32(block.OutGoingMBRegisterToken): &dataFormatterExecuteOperation{
+				hasher:          hasher,
+				executeOpPrefix: executeRegisterTokenPrefix,
+			},
+			int32(block.OutGoingMBRegisterBlsKey): &dataFormatterExecuteOperation{
+				hasher:          hasher,
+				executeOpPrefix: executeRegisterValidatorPrefix,
+			},
+			int32(block.OutGoingMBUnRegisterBlsKey): &dataFormatterExecuteOperation{
+				hasher:          hasher,
+				executeOpPrefix: executeUnRegisterValidatorPrefix,
+			},
+		},
 	}, nil
 }
 
@@ -38,52 +49,31 @@ func (df *dataFormatter) CreateTxsData(data *sovereign.BridgeOperations) [][]byt
 	}
 
 	for _, bridgeData := range data.Data {
-		log.Debug("creating tx data", "bridge op hash", bridgeData.Hash, "no. of operations", len(bridgeData.OutGoingOperations))
+		log.Debug("creating tx data",
+			"type", block.OutGoingMBType(bridgeData.Type).String(),
+			"bridge op hash", bridgeData.Hash,
+			"no. of operations", len(bridgeData.OutGoingOperations),
+		)
 
-		registerBridgeOpData := df.createRegisterBridgeOperationsData(bridgeData)
-		if len(registerBridgeOpData) != 0 {
-			txsData = append(txsData, registerBridgeOpData)
+		handler, found := df.dataFormatterHandlers[bridgeData.Type]
+		if !found {
+			log.Error("received unknown bridge data", "type", bridgeData.Type)
+			continue
 		}
 
-		txsData = append(txsData, createBridgeOperationsData(bridgeData.Hash, bridgeData.OutGoingOperations)...)
+		newTxsData, err := handler.createTxsData(bridgeData)
+		if err != nil {
+			log.Error("could not create txs data",
+				"error", err,
+				"hash", bridgeData.Hash,
+				"type", block.OutGoingMBType(bridgeData.Type).String())
+			continue
+		}
+
+		txsData = append(txsData, newTxsData...)
 	}
 
 	return txsData
-}
-
-func (df *dataFormatter) createRegisterBridgeOperationsData(bridgeData *sovereign.BridgeOutGoingData) []byte {
-	hashes := make([]byte, 0)
-	hashesHexEncodedArgs := make([]byte, 0)
-	for _, operation := range bridgeData.OutGoingOperations {
-		hashesHexEncodedArgs = append(hashesHexEncodedArgs, "@"+hex.EncodeToString(operation.Hash)...)
-		hashes = append(hashes, operation.Hash...)
-	}
-
-	// unconfirmed operation, should not register it, only resend it
-	computedHashOfHashes := df.hasher.Compute(string(hashes))
-	if !bytes.Equal(bridgeData.Hash, computedHashOfHashes) {
-		return nil
-	}
-
-	registerBridgeOpData := []byte(registerBridgeOpsPrefix +
-		"@" + hex.EncodeToString(bridgeData.AggregatedSignature) +
-		"@" + hex.EncodeToString(bridgeData.Hash))
-
-	return append(registerBridgeOpData, hashesHexEncodedArgs...)
-}
-
-func createBridgeOperationsData(hashOfHashes []byte, outGoingOperations []*sovereign.OutGoingOperation) [][]byte {
-	executeBridgeOpsTxData := make([][]byte, 0)
-	for _, operation := range outGoingOperations {
-		bridgeOpTxData := []byte(
-			executeBridgeOpsPrefix +
-				"@" + hex.EncodeToString(hashOfHashes) +
-				"@" + hex.EncodeToString(operation.Data))
-
-		executeBridgeOpsTxData = append(executeBridgeOpsTxData, bridgeOpTxData)
-	}
-
-	return executeBridgeOpsTxData
 }
 
 // IsInterfaceNil checks if the underlying pointer is nil

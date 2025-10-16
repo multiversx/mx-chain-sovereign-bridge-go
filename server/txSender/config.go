@@ -8,9 +8,11 @@ type WalletConfig struct {
 
 // TxSenderConfig holds tx sender config
 type TxSenderConfig struct {
-	HeaderVerifierSCAddress string
-	EsdtSafeSCAddress       string
-	Proxy                   string
-	IntervalToSend          int
-	Hasher                  string
+	HeaderVerifierSCAddress   string
+	EsdtSafeSCAddress         string
+	ChangeValidatorsSCAddress string
+	ChainConfigSCAddress      string
+	Proxy                     string
+	IntervalToSend            int
+	Hasher                    string
 }
