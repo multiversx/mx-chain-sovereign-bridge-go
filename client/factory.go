@@ -44,7 +44,7 @@ func connectWithRetries(host string, cfg cert.FileCfg) (GRPCConn, error) {
 
 	for i := 0; ; i++ {
 		tlsCredentials := credentials.NewTLS(tlsConfig)
-		cc, errConnection := grpc.Dial(host, grpc.WithTransportCredentials(tlsCredentials))
+		cc, errConnection := grpc.NewClient(host, grpc.WithTransportCredentials(tlsCredentials))
 		if errConnection == nil {
 			return cc, errConnection
 		}

@@ -2,6 +2,7 @@ package txSender
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/multiversx/mx-chain-core-go/core/check"
@@ -11,25 +12,36 @@ import (
 	"github.com/multiversx/mx-sdk-go/data"
 )
 
+const (
+	gasLimitDefault       = 50_000_000
+	gasLimitRegisterToken = 80_000_000
+)
+
 // TxSenderArgs holds args to create a new tx sender
 type TxSenderArgs struct {
-	Wallet                  core.CryptoComponentsHolder
-	Proxy                   Proxy
-	TxInteractor            TxInteractor
-	TxNonceHandler          TxNonceSenderHandler
-	DataFormatter           DataFormatter
-	SCHeaderVerifierAddress string
-	SCEsdtSafeAddress       string
+	Wallet                    core.CryptoComponentsHolder
+	Proxy                     Proxy
+	TxInteractor              TxInteractor
+	TxNonceHandler            TxNonceSenderHandler
+	DataFormatter             DataFormatter
+	SCHeaderVerifierAddress   string
+	SCEsdtSafeAddress         string
+	SCChangeValidatorsAddress string
+	SCChainConfigAddress      string
+}
+
+type txConfig struct {
+	receiver string
+	gasLimit uint64
 }
 
 type txSender struct {
-	wallet                  core.CryptoComponentsHolder
-	netConfigs              *data.NetworkConfig
-	txInteractor            TxInteractor
-	txNonceHandler          TxNonceSenderHandler
-	dataFormatter           DataFormatter
-	scHeaderVerifierAddress string
-	scEsdtSafeAddress       string
+	wallet         core.CryptoComponentsHolder
+	netConfigs     *data.NetworkConfig
+	txInteractor   TxInteractor
+	txNonceHandler TxNonceSenderHandler
+	dataFormatter  DataFormatter
+	txConfigs      map[string]*txConfig
 }
 
 // NewTxSender creates a new tx sender
@@ -45,13 +57,40 @@ func NewTxSender(args TxSenderArgs) (*txSender, error) {
 	}
 
 	return &txSender{
-		wallet:                  args.Wallet,
-		netConfigs:              networkConfig,
-		txInteractor:            args.TxInteractor,
-		txNonceHandler:          args.TxNonceHandler,
-		dataFormatter:           args.DataFormatter,
-		scHeaderVerifierAddress: args.SCHeaderVerifierAddress,
-		scEsdtSafeAddress:       args.SCEsdtSafeAddress,
+		wallet:         args.Wallet,
+		netConfigs:     networkConfig,
+		txInteractor:   args.TxInteractor,
+		txNonceHandler: args.TxNonceHandler,
+		dataFormatter:  args.DataFormatter,
+		txConfigs: map[string]*txConfig{
+			registerBridgeOpsPrefix: {
+				receiver: args.SCHeaderVerifierAddress,
+				gasLimit: gasLimitDefault,
+			},
+
+			executeDepositBridgeOpsPrefix: {
+				receiver: args.SCEsdtSafeAddress,
+				gasLimit: gasLimitDefault,
+			},
+			executeRegisterTokenPrefix: {
+				receiver: args.SCEsdtSafeAddress,
+				gasLimit: gasLimitRegisterToken,
+			},
+
+			changeValidatorSetPrefix: {
+				receiver: args.SCChangeValidatorsAddress,
+				gasLimit: gasLimitDefault,
+			},
+
+			executeRegisterValidatorPrefix: {
+				receiver: args.SCChainConfigAddress,
+				gasLimit: gasLimitDefault,
+			},
+			executeUnRegisterValidatorPrefix: {
+				receiver: args.SCChainConfigAddress,
+				gasLimit: gasLimitDefault,
+			},
+		},
 	}, nil
 }
 
@@ -77,6 +116,12 @@ func checkArgs(args TxSenderArgs) error {
 	if len(args.SCEsdtSafeAddress) == 0 {
 		return errNoEsdtSafeSCAddress
 	}
+	if len(args.SCChangeValidatorsAddress) == 0 {
+		return errNoChangeValidatorSetSCAddress
+	}
+	if len(args.SCChainConfigAddress) == 0 {
+		return errNoChainConfigSCAddress
+	}
 
 	return nil
 }
@@ -95,37 +140,23 @@ func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.Bridge
 	txsData := ts.dataFormatter.CreateTxsData(data)
 
 	for _, txData := range txsData {
-		var tx *coreTx.FrontendTransaction
+		tx := &coreTx.FrontendTransaction{
+			Value:    "0",
+			Sender:   ts.wallet.GetBech32(),
+			GasPrice: ts.netConfigs.MinGasPrice,
+			GasLimit: gasLimitDefault, // todo: we need proper gas estimation in the future
+			Data:     txData,
+			ChainID:  ts.netConfigs.ChainID,
+			Version:  ts.netConfigs.MinTransactionVersion,
+		}
 
-		switch {
-		case strings.HasPrefix(string(txData), registerBridgeOpsPrefix):
-			tx = &coreTx.FrontendTransaction{
-				Value:    "0",
-				Receiver: ts.scHeaderVerifierAddress,
-				Sender:   ts.wallet.GetBech32(),
-				GasPrice: ts.netConfigs.MinGasPrice,
-				GasLimit: 50_000_000, // todo
-				Data:     txData,
-				ChainID:  ts.netConfigs.ChainID,
-				Version:  ts.netConfigs.MinTransactionVersion,
-			}
-		case strings.HasPrefix(string(txData), executeBridgeOpsPrefix):
-			tx = &coreTx.FrontendTransaction{
-				Value:    "0",
-				Receiver: ts.scEsdtSafeAddress,
-				Sender:   ts.wallet.GetBech32(),
-				GasPrice: ts.netConfigs.MinGasPrice,
-				GasLimit: 50_000_000, // todo
-				Data:     txData,
-				ChainID:  ts.netConfigs.ChainID,
-				Version:  ts.netConfigs.MinTransactionVersion,
-			}
-		default:
-			log.Error("invalid tx data received", "data", string(txData))
+		err := ts.setTxFields(txData, tx)
+		if err != nil {
+			log.Error("invalid tx data received", "data", string(txData), "error", err)
 			continue
 		}
 
-		err := ts.txNonceHandler.ApplyNonceAndGasPrice(ctx, tx)
+		err = ts.txNonceHandler.ApplyNonceAndGasPrice(ctx, tx)
 		if err != nil {
 			return nil, err
 		}
@@ -145,6 +176,23 @@ func (ts *txSender) createAndSendTxs(ctx context.Context, data *sovereign.Bridge
 	}
 
 	return txHashes, nil
+}
+
+func (ts *txSender) setTxFields(txData []byte, tx *coreTx.FrontendTransaction) error {
+	prefixID := getTxDataPrefix(txData)
+	txCfg, found := ts.txConfigs[prefixID]
+	if !found {
+		return fmt.Errorf("%w, prefix = %s", errInvalidTxDataPrefix, prefixID)
+	}
+
+	tx.Receiver = txCfg.receiver
+	tx.GasLimit = txCfg.gasLimit
+	return nil
+}
+
+func getTxDataPrefix(txData []byte) string {
+	prefix := strings.Split(string(txData), "@")
+	return prefix[0]
 }
 
 // IsInterfaceNil checks if the underlying pointer is nil
